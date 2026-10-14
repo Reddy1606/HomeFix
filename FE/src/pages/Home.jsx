@@ -139,24 +139,38 @@ export default function Home() {
       </section>
 
       {/* FEATURED SERVICES */}
-      <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-        <SectionHeading eyebrow="Bảng giá" title="Dịch vụ phổ biến" />
-        {isLoading ? (
-          <ServiceGridSkeleton count={6} />
-        ) : (
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {services.map((service) => (
-              <ServiceCard key={service.id} service={service} />
-            ))}
+      <section className="relative overflow-hidden bg-brand-50 py-20">
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage:
+              'radial-gradient(circle, rgba(37,99,235,0.28) 1.8px, transparent 1.8px)',
+            backgroundSize: '26px 26px',
+          }}
+        />
+        <div className="bg-blob -left-16 top-0 h-80 w-80 bg-brand-300 opacity-50" />
+        <div className="bg-blob -right-16 bottom-0 h-96 w-96 bg-accent-200 opacity-50" />
+        <div className="absolute inset-0 bg-gradient-to-b from-white/0 via-white/40 to-white" />
+
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <SectionHeading eyebrow="Bảng giá" title="Dịch vụ phổ biến" />
+          {isLoading ? (
+            <ServiceGridSkeleton count={6} />
+          ) : (
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {services.map((service) => (
+                <ServiceCard key={service.id} service={service} />
+              ))}
+            </div>
+          )}
+          <div className="mt-10 text-center">
+            <Link
+              to="/services"
+              className="inline-flex items-center gap-1 rounded-full border-2 border-brand-600 px-6 py-2.5 text-sm font-bold text-brand-600 transition hover:bg-brand-600 hover:text-white"
+            >
+              Xem tất cả →
+            </Link>
           </div>
-        )}
-        <div className="mt-10 text-center">
-          <Link
-            to="/services"
-            className="inline-flex items-center gap-1 rounded-full border-2 border-brand-600 px-6 py-2.5 text-sm font-bold text-brand-600 transition hover:bg-brand-600 hover:text-white"
-          >
-            Xem tất cả →
-          </Link>
         </div>
       </section>
 
