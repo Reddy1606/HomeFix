@@ -56,3 +56,18 @@ body {
   opacity: 0.35;
   pointer-events: none;
 }
+
+/* Hiệu ứng icon bồng bềnh nhẹ cho minh họa hero */
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-float-slow {
+  animation: float-slow 4s ease-in-out infinite;
+}

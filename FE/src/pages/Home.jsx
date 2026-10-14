@@ -81,19 +81,47 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            {SERVICE_CATEGORIES.map((cat) => (
-              <Link
-                key={cat.slug}
-                to={`/services?category=${encodeURIComponent(cat.name)}`}
-                className="group flex flex-col items-center justify-center gap-3 rounded-3xl bg-white/10 p-7 text-center ring-1 ring-white/15 backdrop-blur-md transition hover:-translate-y-1 hover:bg-white/20"
+          <div>
+            <div className="relative mb-5 flex h-48 items-center justify-center overflow-hidden rounded-3xl bg-white/10 ring-1 ring-white/15 backdrop-blur-md sm:h-56">
+              <div className="absolute h-32 w-32 rounded-full bg-white/20 blur-2xl" />
+              <span className="relative text-7xl drop-shadow-lg sm:text-8xl">🏠</span>
+              <span className="animate-float-slow absolute left-5 top-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-xl shadow-lg sm:h-14 sm:w-14 sm:text-2xl">
+                🔧
+              </span>
+              <span
+                className="animate-float-slow absolute right-6 top-8 flex h-11 w-11 items-center justify-center rounded-2xl bg-accent-500 text-lg shadow-lg sm:h-12 sm:w-12 sm:text-xl"
+                style={{ animationDelay: '0.6s' }}
               >
-                <span className="text-4xl transition group-hover:scale-110">
-                  {cat.icon}
-                </span>
-                <span className="text-sm font-semibold">{cat.name}</span>
-              </Link>
-            ))}
+                ❄️
+              </span>
+              <span
+                className="animate-float-slow absolute bottom-7 left-10 flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-lg shadow-lg sm:h-12 sm:w-12 sm:text-xl"
+                style={{ animationDelay: '1.2s' }}
+              >
+                💡
+              </span>
+              <span
+                className="animate-float-slow absolute bottom-5 right-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-xl shadow-lg sm:h-14 sm:w-14 sm:text-2xl"
+                style={{ animationDelay: '0.3s' }}
+              >
+                🪛
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              {SERVICE_CATEGORIES.map((cat) => (
+                <Link
+                  key={cat.slug}
+                  to={`/services?category=${encodeURIComponent(cat.name)}`}
+                  className="group flex flex-col items-center justify-center gap-3 rounded-3xl bg-white/10 p-5 text-center ring-1 ring-white/15 backdrop-blur-md transition hover:-translate-y-1 hover:bg-white/20"
+                >
+                  <span className="text-3xl transition group-hover:scale-110">
+                    {cat.icon}
+                  </span>
+                  <span className="text-sm font-semibold">{cat.name}</span>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
 
