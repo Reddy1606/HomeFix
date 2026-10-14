@@ -39,3 +39,20 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* Hiệu ứng chữ gradient dùng cho tiêu đề nổi bật */
+.text-gradient {
+  background: linear-gradient(90deg, #fff 20%, #bfdbfe 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Vòng tròn mờ trang trí tạo chiều sâu cho nền (blob) */
+.bg-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: 0.35;
+  pointer-events: none;
+}

@@ -55,13 +55,10 @@ export default function Services() {
       />
 
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
-          Danh sách dịch vụ sửa chữa
+        <h1 className="text-2xl font-extrabold tracking-tight text-gray-900 sm:text-3xl">
+          Dịch vụ sửa chữa
         </h1>
-        <p className="mt-2 max-w-2xl text-gray-500">
-          Bảng giá niêm yết minh bạch cho từng đầu việc. Chọn danh mục hoặc tìm
-          kiếm dịch vụ bạn đang cần.
-        </p>
+        <p className="mt-1 text-sm text-gray-500">Giá niêm yết, minh bạch.</p>
       </div>
 
       {/* Search + Filter */}
@@ -70,10 +67,10 @@ export default function Services() {
           <button
             type="button"
             onClick={() => handleSelectCategory('')}
-            className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+            className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
               activeCategory === ''
-                ? 'bg-brand-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
             Tất cả
@@ -83,10 +80,10 @@ export default function Services() {
               key={cat.slug}
               type="button"
               onClick={() => handleSelectCategory(cat.name)}
-              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+              className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                 activeCategory === cat.name
-                  ? 'bg-brand-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
               {cat.icon} {cat.name}
@@ -99,8 +96,8 @@ export default function Services() {
             type="search"
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
-            placeholder="Tìm dịch vụ, ví dụ: sửa máy lạnh..."
-            className="w-full rounded-full border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+            placeholder="Tìm dịch vụ..."
+            className="w-full rounded-full border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-100"
           />
           <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
             🔍
@@ -111,14 +108,14 @@ export default function Services() {
       {isLoading && <ServiceGridSkeleton count={6} />}
 
       {!isLoading && error && (
-        <p className="rounded-lg bg-red-50 p-4 text-center text-sm text-red-600">
+        <p className="rounded-2xl bg-red-50 p-4 text-center text-sm text-red-600">
           {error}
         </p>
       )}
 
       {!isLoading && !error && filteredServices.length === 0 && (
-        <p className="rounded-lg bg-gray-50 p-8 text-center text-gray-500">
-          Không tìm thấy dịch vụ phù hợp. Hãy thử từ khóa hoặc danh mục khác.
+        <p className="rounded-2xl bg-gray-50 p-8 text-center text-gray-500">
+          Không tìm thấy dịch vụ phù hợp.
         </p>
       )}
 

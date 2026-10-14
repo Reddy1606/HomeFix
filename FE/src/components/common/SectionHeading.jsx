@@ -1,14 +1,38 @@
-export default function SectionHeading({ eyebrow, title, subtitle, center = true }) {
+export default function SectionHeading({
+  eyebrow,
+  title,
+  subtitle,
+  center = true,
+  variant = 'dark',
+}) {
+  const isLight = variant === 'light';
+
   return (
     <div className={`mb-10 ${center ? 'text-center' : ''}`}>
       {eyebrow && (
-        <span className="mb-2 inline-block text-sm font-semibold uppercase tracking-wide text-brand-600">
+        <span
+          className={`mb-2 inline-block rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${
+            isLight ? 'bg-white/10 text-blue-200' : 'bg-brand-50 text-brand-600'
+          }`}
+        >
           {eyebrow}
         </span>
       )}
-      <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">{title}</h2>
+      <h2
+        className={`mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl ${
+          isLight ? 'text-white' : 'text-gray-900'
+        }`}
+      >
+        {title}
+      </h2>
       {subtitle && (
-        <p className="mx-auto mt-3 max-w-2xl text-gray-500">{subtitle}</p>
+        <p
+          className={`mx-auto mt-2 max-w-xl text-sm ${
+            isLight ? 'text-blue-200' : 'text-gray-500'
+          }`}
+        >
+          {subtitle}
+        </p>
       )}
     </div>
   );

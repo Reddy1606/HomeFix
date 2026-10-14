@@ -9,14 +9,13 @@ export default function Footer() {
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 py-12 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
         <div>
           <div className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 text-lg font-bold text-white">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-lg font-bold text-white">
               H
             </span>
-            <span className="text-lg font-bold text-white">HomeFix</span>
+            <span className="text-lg font-extrabold text-white">HomeFix</span>
           </div>
           <p className="mt-3 text-sm leading-relaxed text-gray-400">
-            Nền tảng gọi thợ sửa chữa tại nhà theo yêu cầu. Thợ đã xác minh CCCD
-            và lý lịch tư pháp, giá niêm yết minh bạch, bảo hành rõ ràng.
+            Gọi thợ sửa chữa tại nhà — nhanh, minh bạch, có bảo hành.
           </p>
         </div>
 
@@ -71,7 +70,7 @@ export default function Footer() {
             Liên hệ
           </h3>
           <ul className="space-y-2 text-sm text-gray-400">
-            <li>📍 Đại học FPT, TP. Thủ Đức, TP.HCM</li>
+            <li>📍 Đại học FPT, TP. Thủ Đức</li>
             <li>
               📞{' '}
               <a href="tel:19001234" className="hover:text-white">
@@ -84,15 +83,14 @@ export default function Footer() {
                 support@homefix.vn
               </a>
             </li>
-            <li>🕐 Hoạt động 24/7, kể cả ngày lễ</li>
+            <li>🕐 Hỗ trợ 24/7</li>
           </ul>
         </div>
       </div>
 
       <div className="border-t border-gray-800 py-5">
         <p className="mx-auto max-w-7xl px-4 text-center text-xs text-gray-500 sm:px-6 lg:px-8">
-          © {CURRENT_YEAR} HomeFix · Đề án Khởi nghiệp đổi mới sáng
-          tạo EXE101 - Đại học FPT. Mọi dữ liệu dịch vụ chỉ mang tính minh họa.
+          © {CURRENT_YEAR} HomeFix · Đồ án EXE101 - Đại học FPT.
         </p>
       </div>
     </footer>

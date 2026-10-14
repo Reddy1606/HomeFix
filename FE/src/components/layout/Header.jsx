@@ -16,7 +16,7 @@ function NavItem({ to, label, onClick }) {
       <a
         href={to}
         onClick={onClick}
-        className="block px-3 py-2 text-sm font-medium text-gray-700 hover:text-brand-600 md:px-0"
+        className="block px-3 py-2 text-sm font-semibold text-gray-600 hover:text-brand-600 md:px-0"
       >
         {label}
       </a>
@@ -29,8 +29,8 @@ function NavItem({ to, label, onClick }) {
       end={to === '/'}
       onClick={onClick}
       className={({ isActive }) =>
-        `block px-3 py-2 text-sm font-medium md:px-0 ${
-          isActive ? 'text-brand-600' : 'text-gray-700 hover:text-brand-600'
+        `block px-3 py-2 text-sm font-semibold md:px-0 ${
+          isActive ? 'text-brand-600' : 'text-gray-600 hover:text-brand-600'
         }`
       }
     >
@@ -47,18 +47,15 @@ export default function Header() {
     <header className="sticky top-0 z-50 border-b border-gray-100 bg-white/95 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
         <Link to="/" className="flex items-center gap-2" onClick={closeMenu}>
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 text-lg font-bold text-white">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-lg font-bold text-white shadow-md shadow-brand-500/30">
             H
           </span>
-          <span className="flex flex-col leading-tight">
-            <span className="text-lg font-bold text-gray-900">HomeFix</span>
-            <span className="hidden text-[11px] text-gray-500 sm:block">
-              An tâm - Minh bạch - Tiện lợi
-            </span>
+          <span className="text-lg font-extrabold tracking-tight text-gray-900">
+            HomeFix
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-6 md:flex">
+        <nav className="hidden items-center gap-7 md:flex">
           {NAV_LINKS.map((link) => (
             <NavItem key={link.to} {...link} />
           ))}
@@ -67,13 +64,13 @@ export default function Header() {
         <div className="hidden items-center gap-3 md:flex">
           <Link
             to="/login"
-            className="text-sm font-medium text-gray-700 hover:text-brand-600"
+            className="text-sm font-semibold text-gray-700 hover:text-brand-600"
           >
             Đăng nhập
           </Link>
           <Link
             to="/booking"
-            className="rounded-full bg-accent-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-accent-600"
+            className="rounded-full bg-accent-500 px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-accent-500/30 transition hover:scale-105 hover:bg-accent-600"
           >
             Gọi thợ ngay
           </Link>
