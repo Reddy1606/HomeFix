@@ -5,7 +5,6 @@ const NAV_LINKS = [
   { to: '/', label: 'Trang chủ' },
   { to: '/services', label: 'Dịch vụ' },
   { to: '/booking', label: 'Đặt lịch' },
-  { to: '/#about', label: 'Về HomeFix' },
   { to: '/#contact', label: 'Liên hệ' },
 ];
 
