@@ -1,0 +1,106 @@
+const { validationResult } = require('express-validator');
+const User = require('../models/User');
+
+/**
+ * @desc    Lấy danh sách tất cả users (có phân trang)
+ * @route   GET /api/admin/users
+ * @access  Private (Admin only)
+ */
+const getAllUsers = async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const role = req.query.role || null;
+
+    const { users, total } = await User.findAll({ page, limit, role });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        users,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Lấy thông tin chi tiết 1 user
+ * @route   GET /api/admin/users/:id
+ * @access  Private (Admin only)
+ */
+const getUserById = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy người dùng.',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: { user },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Xác minh thợ (verify technician KYC)
+ * @route   PUT /api/admin/users/:id/verify
+ * @access  Private (Admin only)
+ */
+const verifyUser = async (req, res, next) => {
+  try {
+    const { verified } = req.body;
+
+    if (typeof verified !== 'boolean') {
+      return res.status(400).json({
+        success: false,
+        message: 'Trường "verified" phải là true hoặc false.',
+      });
+    }
+
+    // Kiểm tra user tồn tại
+    const existingUser = await User.findById(req.params.id);
+    if (!existingUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy người dùng.',
+      });
+    }
+
+    if (existingUser.role !== 'technician') {
+      return res.status(400).json({
+        success: false,
+        message: 'Chỉ có thể xác minh tài khoản thợ (technician).',
+      });
+    }
+
+    const user = await User.verifyTechnician(req.params.id, verified);
+
+    res.status(200).json({
+      success: true,
+      message: verified ? 'Xác minh thợ thành công!' : 'Đã hủy xác minh thợ.',
+      data: { user },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = {
+  getAllUsers,
+  getUserById,
+  verifyUser,
+};
