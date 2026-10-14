@@ -3,6 +3,30 @@ const router = express.Router();
 const { getAllUsers, getUserById, verifyUser } = require('../controllers/userController');
 const authenticate = require('../middlewares/authMiddleware');
 const authorize = require('../middlewares/roleMiddleware');
+const validate = require('../middlewares/validate');
+const {
+  getAllServices,
+  getServiceById,
+  createService,
+  updateService,
+  deleteService,
+} = require('../controllers/adminServiceController');
+const {
+  getAllBookings,
+  getBookingById,
+  updateBookingStatus,
+} = require('../controllers/adminBookingController');
+const {
+  adminListServicesValidation,
+  serviceIdValidation,
+  createServiceValidation,
+  updateServiceValidation,
+} = require('../validators/serviceValidator');
+const {
+  adminListBookingsValidation,
+  bookingIdValidation,
+  updateBookingStatusValidation,
+} = require('../validators/bookingValidator');
 
 // Tất cả routes dưới đây yêu cầu: đăng nhập + role admin
 router.use(authenticate);
@@ -16,5 +40,33 @@ router.get('/users/:id', getUserById);
 
 // PUT /api/admin/users/:id/verify - Xác minh thợ
 router.put('/users/:id/verify', verifyUser);
+
+// ==================== QUẢN LÝ DỊCH VỤ ====================
+
+// GET /api/admin/services - Danh sách dịch vụ (gồm cả dịch vụ đã ẩn)
+router.get('/services', adminListServicesValidation, validate, getAllServices);
+
+// POST /api/admin/services - Tạo dịch vụ mới
+router.post('/services', createServiceValidation, validate, createService);
+
+// GET /api/admin/services/:id - Chi tiết dịch vụ
+router.get('/services/:id', serviceIdValidation, validate, getServiceById);
+
+// PUT /api/admin/services/:id - Cập nhật dịch vụ (cũng dùng để ẩn/hiện qua is_active)
+router.put('/services/:id', updateServiceValidation, validate, updateService);
+
+// DELETE /api/admin/services/:id - Ngừng cung cấp dịch vụ (xóa mềm)
+router.delete('/services/:id', serviceIdValidation, validate, deleteService);
+
+// ==================== QUẢN LÝ ĐƠN ĐẶT LỊCH ====================
+
+// GET /api/admin/bookings - Tất cả đơn (lọc theo status, khách, thợ, ngày...)
+router.get('/bookings', adminListBookingsValidation, validate, getAllBookings);
+
+// GET /api/admin/bookings/:id - Chi tiết đơn kèm thông tin khách & thợ
+router.get('/bookings/:id', bookingIdValidation, validate, getBookingById);
+
+// PUT /api/admin/bookings/:id/status - Cập nhật trạng thái đơn (kèm gán thợ)
+router.put('/bookings/:id/status', updateBookingStatusValidation, validate, updateBookingStatus);
 
 module.exports = router;
