@@ -8,6 +8,8 @@ const { errorHandler, notFound } = require('./middlewares/errorHandler');
 // Import routes
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const serviceRoutes = require('./routes/serviceRoutes');
+const bookingRoutes = require('./routes/bookingRoutes');
 
 // Khởi tạo Express app
 const app = express();
@@ -44,6 +46,12 @@ app.get('/api/health', (req, res) => {
 
 // Authentication routes
 app.use('/api/auth', authRoutes);
+
+// Service routes (danh sách & chi tiết dịch vụ - public)
+app.use('/api/services', serviceRoutes);
+
+// Booking routes (đặt lịch, lịch sử - cần đăng nhập)
+app.use('/api/bookings', bookingRoutes);
 
 // Admin routes
 app.use('/api/admin', adminRoutes);
@@ -84,6 +92,14 @@ const startServer = async () => {
     console.log('║  GET    /api/admin/users                     ║');
     console.log('║  GET    /api/admin/users/:id                 ║');
     console.log('║  PUT    /api/admin/users/:id/verify          ║');
+    console.log('║  GET    /api/services                        ║');
+    console.log('║  GET    /api/services/:id                    ║');
+    console.log('║  POST   /api/bookings                        ║');
+    console.log('║  GET    /api/bookings/my                     ║');
+    console.log('║  GET    /api/bookings/:id                    ║');
+    console.log('║  PUT    /api/bookings/:id/cancel             ║');
+    console.log('║  *      /api/admin/services (CRUD)           ║');
+    console.log('║  *      /api/admin/bookings (+ /:id/status)  ║');
     console.log('╚═══════════════════════════════════════════════╝');
     console.log('');
   });

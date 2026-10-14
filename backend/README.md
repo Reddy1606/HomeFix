@@ -179,6 +179,52 @@ API Server sẽ lắng nghe tại: `http://localhost:5000`
 
 ---
 
+### 4. Dịch vụ (Public - Backend 2)
+* `GET  /api/services` - Danh sách dịch vụ (lọc `category`, `search`, `min_price`, `max_price`, `sort`, `page`, `limit`)
+* `GET  /api/services/categories` - Danh mục dịch vụ kèm số lượng
+* `GET  /api/services/:id` - Chi tiết dịch vụ
+
+### 5. Đặt lịch (Customer - Backend 2)
+* `POST /api/bookings` - Tạo đơn đặt lịch (tức thì / hẹn giờ)
+* `GET  /api/bookings/my` - Lịch sử đặt lịch (lọc `status`, phân trang)
+* `GET  /api/bookings/:id` - Chi tiết & trạng thái đơn (khách xem đơn của mình, admin xem mọi đơn)
+* `PUT  /api/bookings/:id/cancel` - Khách tự hủy đơn (khi `pending` / `confirmed`)
+
+### 6. Admin quản trị (Backend 2)
+* `GET|POST /api/admin/services`, `GET|PUT|DELETE /api/admin/services/:id` - Quản lý dịch vụ (DELETE = ẩn dịch vụ)
+* `GET  /api/admin/bookings` - Danh sách đơn (lọc `status`, `customer_id`, `technician_id`, `booking_type`, `from`, `to`)
+* `GET  /api/admin/bookings/:id` - Chi tiết đơn kèm khách & thợ
+* `PUT  /api/admin/bookings/:id/status` - Cập nhật trạng thái đơn, gán thợ
+
+📘 Chi tiết request/response: **[API_BACKEND2.md](./API_BACKEND2.md)**
+🧪 Postman: **[HomeFix_Backend2_Postman_Collection.json](./HomeFix_Backend2_Postman_Collection.json)**
+🚀 Deploy lên Render: **[DEPLOYMENT.md](./DEPLOYMENT.md)**
+
+---
+
+## 🌱 DỮ LIỆU DEMO
+
+```bash
+npm run seed
+```
+Thêm 8 dịch vụ, 2 khách hàng, 2 thợ đã xác minh và 8 đơn đặt lịch đủ các trạng thái. Chạy lại nhiều lần không bị nhân đôi dữ liệu.
+
+| Vai trò | Email | Mật khẩu |
+|---|---|---|
+| Admin | `admin@homefix.vn` | `Admin@123` |
+| Khách hàng | `khach1@homefix.vn`, `khach2@homefix.vn` | `Customer@123` |
+| Thợ | `tho1@homefix.vn`, `tho2@homefix.vn` | `Technician@123` |
+
+## 🧪 KIỂM THỬ
+
+```bash
+npm test          # chạy cả test Auth (7 case) và test Backend 2
+npm run test:be2  # chỉ test Services / Booking / Admin
+```
+Test chạy trên database thật và để lại một ít dữ liệu test (tài khoản `*@homefix.test`, đơn của họ, 1 dịch vụ `[TEST]` đã ẩn).
+
+---
+
 ## 🔑 TÀI KHOẢN ADMIN DEMO CÓ SẴN TRONG DATABASE
 
 * **Email:** `admin@homefix.vn`

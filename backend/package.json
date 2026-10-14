@@ -6,11 +6,17 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
-    "test": "node src/test/testAuth.js"
+    "test": "node src/test/testAuth.js && node src/test/testBackend2.js",
+    "test:auth": "node src/test/testAuth.js",
+    "test:be2": "node src/test/testBackend2.js",
+    "seed": "node src/database/seed.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "engines": {
+    "node": ">=20"
+  },
   "type": "commonjs",
   "dependencies": {
     "@supabase/supabase-js": "^2.117.3",

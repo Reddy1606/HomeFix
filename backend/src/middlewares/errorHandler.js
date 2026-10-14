@@ -31,6 +31,22 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
+  if (err.code === '22P02') {
+    // Sai kiểu dữ liệu (VD: id không đúng định dạng UUID)
+    return res.status(400).json({
+      success: false,
+      message: 'Dữ liệu không đúng định dạng.',
+    });
+  }
+
+  if (err.code === '23514') {
+    // Vi phạm CHECK constraint (VD: status không hợp lệ)
+    return res.status(400).json({
+      success: false,
+      message: 'Dữ liệu không thỏa điều kiện của hệ thống.',
+    });
+  }
+
   // Lỗi chung
   const statusCode = err.statusCode || 500;
   const message = err.statusCode ? err.message : 'Đã xảy ra lỗi từ server.';
