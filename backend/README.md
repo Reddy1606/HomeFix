@@ -10,21 +10,9 @@ Hệ thống **HomeFix** được xây dựng theo mô hình **Client - Server h
 
 ```mermaid
 graph TD
-    subgraph Client ["1. TẦNG NGƯỜI DÙNG (Clients)"]
-        Mobile["📱 Khách hàng & Thợ\n(Trình duyệt Safari, Chrome trên Smartphone)"]
-        AdminPC["💻 Ban Quản Trị HomeFix\n(Trình duyệt trên Laptop/Desktop)"]
-    end
-
-    subgraph BackendApp ["2. TẦNG XỬ LÝ NGHIỆP VỤ (Backend Server)"]
-        Server["⚙️ Express.js REST API\n- Local: http://localhost:5000\n- Cloud Deploy: Render.com / Railway\n- Công nghệ: Node.js, JWT, Bcrypt"]
-    end
-
-    subgraph DatabaseLayer ["3. TẦNG CƠ SỞ DỮ LIỆU (PostgreSQL)"]
-        DB["🐘 PostgreSQL 15+ (Hosted on Supabase Cloud)\n- Region: Singapore (ap-southeast-1)\n- 3 Bảng: users, services, bookings\n- Quản lý qua: Supabase Dashboard / pgAdmin / DBeaver"]
-    end
-
-    Client -->|Gửi HTTP Request qua Internet| Server
-    Server -->|Xác thực JWT & Query SQL| DB
+    A["📱 Khách hàng & Thợ (Web Mobile)"] -->|Gửi REST API Request| C["⚙️ Express.js Backend Server<br/>(Node.js, JWT, Bcrypt)"]
+    B["💻 Ban Quản Trị HomeFix (Admin PC)"] -->|Gửi REST API Request| C
+    C -->|Truy vấn SQL & Kiểm tra JWT| D[("🐘 PostgreSQL Database<br/>(Supabase Cloud - Region Singapore)")]
 ```
 
 ### 1. Môi trường phát triển (Development / Local):

@@ -11,11 +11,9 @@ Hệ thống **HomeFix** được thiết kế theo kiến trúc **Cloud-Native 
 
 ```mermaid
 graph LR
-    Client["📱 1. Client (Người dùng)\n- Khách hàng (Web Mobile)\n- Thợ sửa chữa (Web Mobile)\n- Admin Quản Trị (Web PC)"] 
-    -->|HTTP/REST API| 
-    Server["⚙️ 2. Backend Server\n- Express.js (Node.js)\n- Local: localhost:5000\n- Cloud: Render.com / Railway"] 
-    -->|SQL Query & JWT| 
-    DB["🐘 3. Database Layer\n- PostgreSQL 15+\n- Host trên Supabase Cloud\n- Region Singapore"]
+    A["📱 Khách hàng & Thợ<br/>(Web Mobile)"] -->|HTTP / REST API| B["⚙️ Backend Server<br/>(Express.js / Node.js)"]
+    C["💻 Admin Quản trị<br/>(Web Desktop)"] -->|HTTP / REST API| B
+    B -->|PostgreSQL Query & JWT| D[("🐘 Supabase Cloud<br/>PostgreSQL 15+")]
 ```
 
 1. **Khách hàng & Thợ:** Truy cập qua trình duyệt Web trên điện thoại thông minh (Responsive Web App).
