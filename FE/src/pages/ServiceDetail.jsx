@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import Breadcrumb from '../components/common/Breadcrumb';
 import ServiceCard from '../components/common/ServiceCard';
+import ServiceImage from '../components/common/ServiceImage';
 import { fetchServiceById, fetchServices, formatPrice, PRICE_UNIT_LABEL } from '../api/services';
 import { getCategoryIcon } from '../data/mockServices';
 
@@ -91,8 +92,14 @@ export default function ServiceDetail() {
         <>
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-5">
             <div className="lg:col-span-2">
-              <div className="flex h-56 items-center justify-center rounded-3xl bg-gradient-to-br from-brand-50 to-brand-100 text-8xl lg:h-full">
-                {getCategoryIcon(service.category)}
+              <div className="h-56 overflow-hidden rounded-3xl lg:h-full">
+                <ServiceImage
+                  src={service.image_url}
+                  alt={service.name}
+                  icon={getCategoryIcon(service.category)}
+                  className="h-full w-full"
+                  iconClassName="text-8xl"
+                />
               </div>
             </div>
 

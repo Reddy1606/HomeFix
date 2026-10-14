@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { formatPrice } from '../../api/services';
 import { getCategoryIcon } from '../../data/mockServices';
+import ServiceImage from './ServiceImage';
 
 export default function ServiceCard({ service }) {
   return (
@@ -8,8 +9,13 @@ export default function ServiceCard({ service }) {
       to={`/services/${service.id}`}
       className="group flex h-full flex-col overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm transition hover:-translate-y-1.5 hover:shadow-xl hover:shadow-brand-100"
     >
-      <div className="flex h-28 items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100 text-4xl transition group-hover:scale-105">
-        {getCategoryIcon(service.category)}
+      <div className="h-32 overflow-hidden">
+        <ServiceImage
+          src={service.image_url}
+          alt={service.name}
+          icon={getCategoryIcon(service.category)}
+          className="h-full w-full transition group-hover:scale-105"
+        />
       </div>
       <div className="flex flex-1 flex-col gap-1.5 p-4">
         <span className="inline-block w-fit rounded-full bg-brand-100 px-2.5 py-0.5 text-[11px] font-semibold text-brand-700">

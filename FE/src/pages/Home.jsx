@@ -27,22 +27,6 @@ const WHY_CHOOSE_US = [
   { icon: '🔄', title: 'Bảo hành', description: 'Sửa lại miễn phí' },
 ];
 
-const TESTIMONIALS = [
-  { name: 'Lan Anh', role: 'Quận 7, TP.HCM', content: 'Đặt sáng, trưa thợ tới ngay, giá rõ ràng.', rating: 5 },
-  { name: 'Minh Khoa', role: 'TP. Thủ Đức', content: 'Bảo hành thật, hư lại sửa miễn phí.', rating: 5 },
-  { name: 'Thu Hương', role: 'Bình Thạnh', content: 'Giá niêm yết sẵn, không lo chặt chém.', rating: 5 },
-];
-
-function Stars({ count }) {
-  return (
-    <div className="flex gap-0.5 text-accent-400">
-      {Array.from({ length: count }).map((_, i) => (
-        <span key={i}>★</span>
-      ))}
-    </div>
-  );
-}
-
 export default function Home() {
   const [services, setServices] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -189,37 +173,6 @@ export default function Home() {
               <p className="mt-1 text-xs text-gray-500">{item.description}</p>
             </div>
           ))}
-        </div>
-      </section>
-
-      {/* TESTIMONIALS */}
-      <section className="bg-brand-900 py-20 text-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <SectionHeading
-            eyebrow="Đánh giá"
-            title="1000+ khách hàng tin tưởng"
-            variant="light"
-          />
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-            {TESTIMONIALS.map((item) => (
-              <div
-                key={item.name}
-                className="rounded-3xl bg-white/5 p-6 ring-1 ring-white/10 transition hover:bg-white/10"
-              >
-                <Stars count={item.rating} />
-                <p className="mt-3 text-sm text-blue-50">“{item.content}”</p>
-                <div className="mt-4 flex items-center gap-2.5">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-500 text-xs font-bold">
-                    {item.name.charAt(0)}
-                  </span>
-                  <div>
-                    <p className="text-xs font-semibold">{item.name}</p>
-                    <p className="text-[11px] text-blue-300">{item.role}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 

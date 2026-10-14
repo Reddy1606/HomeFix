@@ -1,5 +1,11 @@
 // Dữ liệu dịch vụ mẫu - dùng tạm khi Backend 2 chưa triển khai xong API /services
 // Cấu trúc field khớp 100% với bảng `services` trong migration.sql (snake_case)
+// `image_url` là field bổ sung ở Frontend (chưa có trong schema), trỏ tới ảnh
+// tư liệu mở (Wikimedia Commons - được phép sử dụng tự do) minh họa cho dịch vụ.
+// Nếu Backend trả về service không có image_url, giao diện tự fallback về icon.
+const commonsImage = (fileName) =>
+  `https://commons.wikimedia.org/wiki/Special:FilePath/${fileName}?width=640`;
+
 export const SERVICE_CATEGORIES = [
   { slug: 'dien-lanh', name: 'Điện lạnh', icon: '❄️' },
   { slug: 'dien-nuoc', name: 'Điện nước', icon: '🔧' },
@@ -18,6 +24,7 @@ export const MOCK_SERVICES = [
     price_unit: 'per_job',
     warranty_days: 30,
     is_active: true,
+    image_url: commonsImage('Outside_air_conditioner.jpg'),
   },
   {
     id: 's2',
@@ -29,6 +36,9 @@ export const MOCK_SERVICES = [
     price_unit: 'per_job',
     warranty_days: 30,
     is_active: true,
+    image_url: commonsImage(
+      'MITSUBISHI_ELECTRIC_WINDOW_TYPE_AIR_CONDITIONER_OUTDOOR_UNIT.jpg',
+    ),
   },
   {
     id: 's3',
@@ -40,6 +50,7 @@ export const MOCK_SERVICES = [
     price_unit: 'per_job',
     warranty_days: 14,
     is_active: true,
+    image_url: commonsImage('Brass_water_tap.jpg'),
   },
   {
     id: 's4',
@@ -51,6 +62,7 @@ export const MOCK_SERVICES = [
     price_unit: 'per_job',
     warranty_days: 14,
     is_active: true,
+    image_url: commonsImage('Dripping_faucet_2.jpg'),
   },
   {
     id: 's5',
@@ -62,6 +74,7 @@ export const MOCK_SERVICES = [
     price_unit: 'per_job',
     warranty_days: 14,
     is_active: true,
+    image_url: commonsImage('Electrical_panel_opened.jpg'),
   },
   {
     id: 's6',
@@ -73,6 +86,7 @@ export const MOCK_SERVICES = [
     price_unit: 'per_job',
     warranty_days: 7,
     is_active: true,
+    image_url: commonsImage('LED_bulbs_2012.jpg'),
   },
   {
     id: 's7',
@@ -84,6 +98,7 @@ export const MOCK_SERVICES = [
     price_unit: 'per_job',
     warranty_days: 30,
     is_active: true,
+    image_url: commonsImage('Front_loader_Washing_machine.jpg'),
   },
   {
     id: 's8',
@@ -95,6 +110,7 @@ export const MOCK_SERVICES = [
     price_unit: 'per_job',
     warranty_days: 14,
     is_active: true,
+    image_url: commonsImage('Door_lock.jpg'),
   },
   {
     id: 's9',
@@ -106,6 +122,7 @@ export const MOCK_SERVICES = [
     price_unit: 'per_job',
     warranty_days: 14,
     is_active: true,
+    image_url: commonsImage('OSCILLATING_WALL_FAN.jpg'),
   },
   {
     id: 's10',
@@ -117,6 +134,7 @@ export const MOCK_SERVICES = [
     price_unit: 'per_job',
     warranty_days: 7,
     is_active: true,
+    image_url: commonsImage('Electrician_Working.jpg'),
   },
 ];
 
