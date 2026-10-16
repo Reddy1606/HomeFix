@@ -176,6 +176,40 @@ class User {
     if (error) throw error;
     return !!data;
   }
+
+  /**
+   * Cập nhật điểm đánh giá trung bình và tổng số review của thợ
+   * @param {string} technicianId
+   * @param {number} newRating - Điểm đánh giá mới (1-5)
+   * @returns {Promise<Object>}
+   */
+  static async updateTechnicianRating(technicianId, newRating) {
+    // Lấy thông tin thợ hiện tại
+    const tech = await this.findById(technicianId);
+    if (!tech) return null;
+
+    const currentTotal = tech.total_reviews || 0;
+    const currentAvg = Number(tech.rating_avg) || 0;
+
+    const newTotal = currentTotal + 1;
+    // Tính trung bình cộng tích lũy, làm tròn 1 chữ số thập phân
+    const calculatedAvg = ((currentAvg * currentTotal) + Number(newRating)) / newTotal;
+    const newAvg = Math.round(calculatedAvg * 10) / 10;
+
+    const { data, error } = await supabase
+      .from('users')
+      .update({
+        rating_avg: newAvg,
+        total_reviews: newTotal,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', technicianId)
+      .select('id, full_name, role, rating_avg, total_reviews')
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
 }
 
 module.exports = User;

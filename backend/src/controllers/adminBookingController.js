@@ -177,26 +177,32 @@ const updateBookingStatus = async (req, res, next) => {
 };
 
 /**
- * @desc    Thống kê tổng quan cho Admin Dashboard
+ * @desc    Thống kê tổng quan cho Admin Dashboard (bao gồm doanh thu & hoa hồng 15%)
  * @route   GET /api/admin/dashboard
  * @access  Private (admin)
  */
 const getDashboardStats = async (req, res, next) => {
   try {
-    const { bookings, total: total_bookings } = await Booking.findAll({ limit: 100 });
-    const { total: total_services } = await Service.findAll({ limit: 1 });
-    const pending_bookings = bookings.filter((b) => b.status === 'pending').length;
-    const completed_bookings = bookings.filter((b) => b.status === 'completed').length;
+    // 1. Thống kê tổng số đơn, phân bố trạng thái, tổng doanh thu & hoa hồng 15%
+    const stats = await Booking.getRevenueAndStatusStats();
+
+    // 2. Tổng số dịch vụ đang có trên hệ thống
+    const { total: total_services } = await Service.findAll({ limit: 1, includeInactive: true });
+
+    // 3. Lấy 5 đơn đặt lịch gần đây nhất
+    const { bookings: recent_bookings } = await Booking.findAll({ limit: 5 });
 
     res.status(200).json({
       success: true,
       message: 'Lấy dữ liệu dashboard thành công.',
       data: {
-        total_bookings,
-        pending_bookings,
-        completed_bookings,
+        total_bookings: stats.total_bookings,
+        pending_bookings: stats.pending_bookings,
+        completed_bookings: stats.completed_bookings,
         total_services,
-        recent_bookings: bookings.slice(0, 5),
+        status_counts: stats.status_counts,
+        revenue: stats.revenue,
+        recent_bookings,
       },
     });
   } catch (error) {

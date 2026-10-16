@@ -115,11 +115,24 @@ INSERT INTO services (name, category, description, base_price, price_unit, warra
     ('Kiểm tra hệ thống điện nước tổng', 'Điện nước', 'Rà soát toàn bộ hệ thống điện nước trong nhà', 500000, 'per_job', 7)
 ON CONFLICT DO NOTHING;
 
+-- ==================== BẢNG REVIEWS ====================
+-- Đánh giá & phản hồi chất lượng thợ sau khi đơn hoàn thành (completed)
+CREATE TABLE IF NOT EXISTS reviews (
+    id              UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    booking_id      UUID UNIQUE NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
+    rating          INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+    comment         TEXT,
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_reviews_booking ON reviews(booking_id);
+
 -- ==================== DISABLE RLS (cho development) ====================
 -- Lưu ý: Trong production cần bật RLS và thiết lập policies
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE services ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bookings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
 
 -- Policy cho phép service_role bypass RLS (backend dùng service_role key)
 CREATE POLICY "Service role can do everything on users" ON users
@@ -129,4 +142,7 @@ CREATE POLICY "Service role can do everything on services" ON services
     FOR ALL USING (true) WITH CHECK (true);
 
 CREATE POLICY "Service role can do everything on bookings" ON bookings
+    FOR ALL USING (true) WITH CHECK (true);
+
+CREATE POLICY "Service role can do everything on reviews" ON reviews
     FOR ALL USING (true) WITH CHECK (true);
