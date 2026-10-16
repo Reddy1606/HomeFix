@@ -15,6 +15,7 @@ const {
   getAllBookings,
   getBookingById,
   updateBookingStatus,
+  getDashboardStats,
 } = require('../controllers/adminBookingController');
 const {
   adminListServicesValidation,
@@ -31,6 +32,9 @@ const {
 // Tất cả routes dưới đây yêu cầu: đăng nhập + role admin
 router.use(authenticate);
 router.use(authorize('admin'));
+
+// GET /api/admin/dashboard - Thống kê tổng quan nền tảng
+router.get('/dashboard', getDashboardStats);
 
 // GET /api/admin/users - Danh sách users (có phân trang, filter role)
 router.get('/users', getAllUsers);
@@ -52,8 +56,9 @@ router.post('/services', createServiceValidation, validate, createService);
 // GET /api/admin/services/:id - Chi tiết dịch vụ
 router.get('/services/:id', serviceIdValidation, validate, getServiceById);
 
-// PUT /api/admin/services/:id - Cập nhật dịch vụ (cũng dùng để ẩn/hiện qua is_active)
+// PUT / PATCH /api/admin/services/:id - Cập nhật dịch vụ
 router.put('/services/:id', updateServiceValidation, validate, updateService);
+router.patch('/services/:id', updateServiceValidation, validate, updateService);
 
 // DELETE /api/admin/services/:id - Ngừng cung cấp dịch vụ (xóa mềm)
 router.delete('/services/:id', serviceIdValidation, validate, deleteService);
@@ -66,7 +71,8 @@ router.get('/bookings', adminListBookingsValidation, validate, getAllBookings);
 // GET /api/admin/bookings/:id - Chi tiết đơn kèm thông tin khách & thợ
 router.get('/bookings/:id', bookingIdValidation, validate, getBookingById);
 
-// PUT /api/admin/bookings/:id/status - Cập nhật trạng thái đơn (kèm gán thợ)
+// PUT / PATCH /api/admin/bookings/:id/status - Cập nhật trạng thái đơn (kèm gán thợ)
 router.put('/bookings/:id/status', updateBookingStatusValidation, validate, updateBookingStatus);
+router.patch('/bookings/:id/status', updateBookingStatusValidation, validate, updateBookingStatus);
 
 module.exports = router;

@@ -176,4 +176,32 @@ const updateBookingStatus = async (req, res, next) => {
   }
 };
 
-module.exports = { getAllBookings, getBookingById, updateBookingStatus };
+/**
+ * @desc    Thống kê tổng quan cho Admin Dashboard
+ * @route   GET /api/admin/dashboard
+ * @access  Private (admin)
+ */
+const getDashboardStats = async (req, res, next) => {
+  try {
+    const { bookings, total: total_bookings } = await Booking.findAll({ limit: 100 });
+    const { total: total_services } = await Service.findAll({ limit: 1 });
+    const pending_bookings = bookings.filter((b) => b.status === 'pending').length;
+    const completed_bookings = bookings.filter((b) => b.status === 'completed').length;
+
+    res.status(200).json({
+      success: true,
+      message: 'Lấy dữ liệu dashboard thành công.',
+      data: {
+        total_bookings,
+        pending_bookings,
+        completed_bookings,
+        total_services,
+        recent_bookings: bookings.slice(0, 5),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { getAllBookings, getBookingById, updateBookingStatus, getDashboardStats };

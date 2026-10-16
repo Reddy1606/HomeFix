@@ -13,11 +13,11 @@ export const fetchAdminServices = (params, options = {}) =>
     .then((res) => res.data.data);
 export const updateBookingStatus = (id, status) =>
   apiClient
-    .patch(`/admin/bookings/${encodeURIComponent(id)}/status`, { status })
+    .put(`/admin/bookings/${encodeURIComponent(id)}/status`, { status })
     .then((res) => res.data.data);
 export const createService = (payload) =>
   apiClient.post('/admin/services', payload).then((res) => res.data.data);
 export const updateService = (id, payload) =>
   apiClient
-    .patch(`/admin/services/${encodeURIComponent(id)}`, payload)
+    .put(`/admin/services/${encodeURIComponent(id)}`, payload)
     .then((res) => res.data.data);

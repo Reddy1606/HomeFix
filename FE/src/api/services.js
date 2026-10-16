@@ -13,7 +13,9 @@ export async function fetchServices({ category } = {}) {
     const { data } = await apiClient.get('/services', {
       params: category ? { category } : undefined,
     });
-    return data.data;
+    if (Array.isArray(data?.data?.services)) return data.data.services;
+    if (Array.isArray(data?.data)) return data.data;
+    return [];
   } catch {
     await wait(400); // mô phỏng độ trễ mạng để hiệu ứng loading hiển thị mượt
     return category
@@ -26,7 +28,7 @@ export async function fetchServices({ category } = {}) {
 export async function fetchServiceById(id) {
   try {
     const { data } = await apiClient.get(`/services/${id}`);
-    return data.data;
+    return data?.data?.service || data?.data || null;
   } catch {
     await wait(400);
     return MOCK_SERVICES.find((s) => s.id === id) || null;
