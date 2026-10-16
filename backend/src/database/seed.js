@@ -159,6 +159,46 @@ const seedBookings = async (userIds) => {
   console.log(`✅ Đơn đặt lịch demo: tạo ${rows.length} đơn (đủ các trạng thái).`);
 };
 
+const seedReviews = async () => {
+  // Lấy các đơn completed chưa có review
+  const { data: completedBookings, error: bError } = await supabase
+    .from('bookings')
+    .select('id, technician_id')
+    .eq('status', 'completed');
+  check(bError, 'Đọc đơn completed');
+
+  if (!completedBookings || completedBookings.length === 0) return;
+
+  let added = 0;
+  for (const b of completedBookings) {
+    const { data: existingReview, error: rError } = await supabase
+      .from('reviews')
+      .select('id')
+      .eq('booking_id', b.id)
+      .maybeSingle();
+    check(rError, 'Kiểm tra review');
+
+    if (!existingReview) {
+      const { error: insertReviewError } = await supabase.from('reviews').insert([{
+        booking_id: b.id,
+        rating: 5,
+        comment: 'Thợ sửa rất chuyên nghiệp, đến đúng giờ, xử lý nhanh chóng và sạch sẽ!',
+      }]);
+      check(insertReviewError, 'Thêm review demo');
+      added++;
+
+      // Cập nhật rating thợ
+      if (b.technician_id) {
+        await supabase
+          .from('users')
+          .update({ rating_avg: 5.0, total_reviews: 1 })
+          .eq('id', b.technician_id);
+      }
+    }
+  }
+  console.log(`✅ Đánh giá (Reviews) demo: thêm ${added} đánh giá mẫu.`);
+};
+
 // ==================== CHẠY ====================
 
 const run = async () => {
@@ -166,6 +206,7 @@ const run = async () => {
   await seedServices();
   const userIds = await seedUsers();
   await seedBookings(userIds);
+  await seedReviews();
 
   console.log('\n--------------------------------------------------');
   console.log('Tài khoản demo:');

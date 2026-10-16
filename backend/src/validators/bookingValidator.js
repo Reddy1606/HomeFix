@@ -95,6 +95,22 @@ const updateBookingStatusValidation = [
   body('technician_id').optional().isUUID().withMessage('technician_id không hợp lệ.'),
 ];
 
+// POST /api/bookings/:id/review
+const createReviewValidation = [
+  idParam,
+  body('rating')
+    .notEmpty()
+    .withMessage('Vui lòng chọn số sao đánh giá.')
+    .isInt({ min: 1, max: 5 })
+    .withMessage('Điểm đánh giá (rating) phải là số nguyên từ 1 đến 5 sao.'),
+  body('comment')
+    .optional({ values: 'null' })
+    .isString()
+    .withMessage('Nhận xét không hợp lệ.')
+    .isLength({ max: 1000 })
+    .withMessage('Nhận xét tối đa 1000 ký tự.'),
+];
+
 module.exports = {
   BOOKING_TYPES,
   DATE_ONLY,
@@ -103,4 +119,5 @@ module.exports = {
   listMyBookingsValidation,
   adminListBookingsValidation,
   updateBookingStatusValidation,
+  createReviewValidation,
 };

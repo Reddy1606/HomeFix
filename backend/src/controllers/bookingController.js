@@ -1,15 +1,21 @@
 const Booking = require('../models/Booking');
 const Service = require('../models/Service');
+const Review = require('../models/Review');
+const User = require('../models/User');
 const { parsePagination, buildPagination } = require('../utils/pagination');
 const { CUSTOMER_CANCELLABLE, STATUS_LABELS } = require('../utils/bookingStatus');
 
 /**
- * Thêm cờ can_cancel để Frontend biết có hiển thị nút "Hủy đơn" hay không
+ * Thêm cờ can_cancel và can_review để Frontend dễ dàng render giao diện
  */
-const withFlags = (booking) => ({
-  ...booking,
-  can_cancel: CUSTOMER_CANCELLABLE.includes(booking.status),
-});
+const withFlags = (booking) => {
+  const hasReview = Array.isArray(booking.reviews) ? booking.reviews.length > 0 : !!booking.reviews;
+  return {
+    ...booking,
+    can_cancel: CUSTOMER_CANCELLABLE.includes(booking.status),
+    can_review: booking.status === 'completed' && !hasReview,
+  };
+};
 
 /**
  * @desc    Tạo đơn đặt lịch sửa chữa
@@ -154,4 +160,74 @@ const cancelBooking = async (req, res, next) => {
   }
 };
 
-module.exports = { createBooking, getMyBookings, getBookingById, cancelBooking };
+/**
+ * @desc    Đánh giá & phản hồi đơn hàng (chỉ khách hàng được đánh giá khi đơn completed)
+ * @route   POST /api/bookings/:id/review
+ * @access  Private (customer)
+ */
+const createReview = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { rating, comment } = req.body;
+
+    const booking = await Booking.findById(id, { withUsers: true });
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy đơn đặt lịch.',
+      });
+    }
+
+    // Chỉ khách hàng sở hữu đơn mới được đánh giá
+    if (booking.customer_id !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Bạn không có quyền đánh giá đơn đặt lịch này.',
+      });
+    }
+
+    // Chỉ được đánh giá khi đơn đã hoàn thành (completed)
+    if (booking.status !== 'completed') {
+      return res.status(400).json({
+        success: false,
+        message: 'Chỉ có thể đánh giá đơn hàng khi đơn đã hoàn thành (completed).',
+      });
+    }
+
+    // Kiểm tra xem đơn đã được đánh giá trước đó chưa (tránh spam đánh giá 2 lần)
+    const existingReview = await Review.findByBookingId(id);
+    if (existingReview) {
+      return res.status(400).json({
+        success: false,
+        message: 'Đơn hàng này đã được đánh giá rồi.',
+      });
+    }
+
+    // Tạo review mới
+    const review = await Review.create({
+      booking_id: id,
+      rating: parseInt(rating, 10),
+      comment: comment ? comment.trim() : null,
+    });
+
+    // Cập nhật điểm uy tín và số lượng đánh giá cho thợ (nếu đơn có thợ phụ trách)
+    if (booking.technician_id) {
+      try {
+        await User.updateTechnicianRating(booking.technician_id, review.rating);
+      } catch (err) {
+        console.warn('⚠️ Lỗi khi cập nhật rating thợ:', err.message);
+      }
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'Đánh giá đơn hàng thành công! Cảm ơn phản hồi của bạn.',
+      data: { review },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { createBooking, getMyBookings, getBookingById, cancelBooking, createReview };
