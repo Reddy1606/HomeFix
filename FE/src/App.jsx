@@ -16,7 +16,9 @@ import AdminLayout from './components/admin/AdminLayout';
 import Dashboard from './pages/admin/Dashboard';
 import Bookings from './pages/admin/Bookings';
 import AdminServices from './pages/admin/Services';
+import AdminUsers from './pages/admin/Users';
 import './styles/account.css';
+import './styles/analytics.css';
 
 export default function App() {
   return (
@@ -47,6 +49,7 @@ export default function App() {
             <Route index element={<Dashboard />} />
             <Route path="bookings" element={<Bookings />} />
             <Route path="services" element={<AdminServices />} />
+            <Route path="users" element={<AdminUsers />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Route>

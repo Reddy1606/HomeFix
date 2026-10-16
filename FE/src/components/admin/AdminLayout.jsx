@@ -5,6 +5,7 @@ const links = [
   { to: '/admin', label: 'Tổng quan', icon: '◫' },
   { to: '/admin/bookings', label: 'Quản lý đơn hàng', icon: '▤' },
   { to: '/admin/services', label: 'Quản lý dịch vụ', icon: '◇' },
+  { to: '/admin/users', label: 'Quản lý tài khoản', icon: '👤' },
 ];
 
 export default function AdminLayout() {
