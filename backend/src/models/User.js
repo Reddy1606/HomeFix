@@ -94,7 +94,7 @@ class User {
    * @param {Object} options - { page, limit, role }
    * @returns {Promise<{ users: Array, total: number }>}
    */
-  static async findAll({ page = 1, limit = 20, role = null } = {}) {
+  static async findAll({ page = 1, limit = 20, role = null, search = null } = {}) {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
@@ -106,6 +106,11 @@ class User {
 
     if (role) {
       query = query.eq('role', role);
+    }
+
+    if (search && search.trim()) {
+      const term = search.trim();
+      query = query.or(`full_name.ilike.%${term}%,email.ilike.%${term}%,phone.ilike.%${term}%`);
     }
 
     const { data, error, count } = await query;

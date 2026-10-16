@@ -21,3 +21,25 @@ export const updateService = (id, payload) =>
   apiClient
     .put(`/admin/services/${encodeURIComponent(id)}`, payload)
     .then((res) => res.data.data);
+
+// ==================== QUẢN LÝ TÀI KHOẢN (USERS) ====================
+export const fetchAdminUsers = (params, options = {}) =>
+  apiClient
+    .get('/admin/users', { ...options, params })
+    .then((res) => res.data.data);
+
+export const fetchAdminUserById = (id, options = {}) =>
+  apiClient
+    .get(`/admin/users/${encodeURIComponent(id)}`, options)
+    .then((res) => res.data.data?.user);
+
+export const verifyTechnician = (id, verified) =>
+  apiClient
+    .put(`/admin/users/${encodeURIComponent(id)}/verify`, { verified })
+    .then((res) => res.data.data?.user);
+
+export const toggleUserStatus = (id, is_active) =>
+  apiClient
+    .put(`/admin/users/${encodeURIComponent(id)}/status`, { is_active })
+    .then((res) => res.data.data?.user);
+

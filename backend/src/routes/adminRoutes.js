@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getAllUsers, getUserById, verifyUser } = require('../controllers/userController');
+const { getAllUsers, getUserById, verifyUser, toggleUserStatus } = require('../controllers/userController');
 const authenticate = require('../middlewares/authMiddleware');
 const authorize = require('../middlewares/roleMiddleware');
 const validate = require('../middlewares/validate');
@@ -36,14 +36,17 @@ router.use(authorize('admin'));
 // GET /api/admin/dashboard - Thống kê tổng quan nền tảng
 router.get('/dashboard', getDashboardStats);
 
-// GET /api/admin/users - Danh sách users (có phân trang, filter role)
+// GET /api/admin/users - Danh sách users (có phân trang, filter role, tìm kiếm)
 router.get('/users', getAllUsers);
 
 // GET /api/admin/users/:id - Chi tiết 1 user
 router.get('/users/:id', getUserById);
 
-// PUT /api/admin/users/:id/verify - Xác minh thợ
+// PUT /api/admin/users/:id/verify - Xác minh thợ (KYC)
 router.put('/users/:id/verify', verifyUser);
+
+// PUT /api/admin/users/:id/status - Khóa / mở khóa tài khoản
+router.put('/users/:id/status', toggleUserStatus);
 
 // ==================== QUẢN LÝ DỊCH VỤ ====================
 
