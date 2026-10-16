@@ -24,6 +24,7 @@ graph LR
 
 ## 📌 TÀI LIỆU QUAN TRỌNG CHO CẢ NHÓM
 
+* 📋 **[TASKS.md](./TASKS.md):** Kế hoạch và bảng phân chia nhiệm vụ Giai đoạn 2 (Hoàn thiện đồ án).
 * 🛡️ **[TEAM_RULES.md](./TEAM_RULES.md):** Quy tắc làm việc nhóm, Git Workflow chống conflict, chuẩn API Contract và Checklist nhiệm vụ từng người.
 * ⚙️ **[Backend README](./backend/README.md):** Hướng dẫn chi tiết cài đặt, cấu trúc code, cách chạy PostgreSQL (Cloud hoặc Local) và danh sách API.
 * 📮 **[Postman Collection](./backend/HomeFix_Backend1_Postman_Collection.json):** Bộ test API tự động hoàn chỉnh để Frontend tải về test ngay.
