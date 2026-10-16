@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { fetchAdminBookings, updateBookingStatus } from '../../api/admin';
+import { fetchAdminBookings } from '../../api/admin';
 import useAdminResource from '../../hooks/useAdminResource';
 import {
   Pagination,
@@ -8,18 +8,8 @@ import {
   StatusBadge,
 } from '../../components/admin/AdminUI';
 import { BOOKING_STATUS, dateLabel, money } from '../../utils/admin';
-import Modal from '../../components/admin/Modal';
-import { apiError } from '../../utils/validation';
+import BookingEditor from '../../components/admin/BookingEditor';
 
-// Các bước thông thường; backend vẫn là nơi kiểm tra quy tắc chuyển trạng thái.
-const nextStatuses = {
-  pending: ['confirmed', 'cancelled'],
-  confirmed: ['in_progress', 'cancelled'],
-  in_progress: ['completed', 'cancelled'],
-  completed: [],
-  cancelled: [],
-  warranty_claim: [],
-};
 
 export default function Bookings() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -35,9 +25,6 @@ export default function Bookings() {
   });
   const rows = resource.data?.bookings || [];
   const [selected, setSelected] = useState(null);
-  const [nextStatus, setNextStatus] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const filter = (patch) => {
     const next = new URLSearchParams(searchParams);
@@ -46,27 +33,7 @@ export default function Bookings() {
     );
     setSearchParams(next);
   };
-  const open = (booking) => {
-    setSelected(booking);
-    setNextStatus('');
-    setError('');
-  };
-  async function save(event) {
-    event.preventDefault();
-    if (!nextStatus || busy) return;
-    setBusy(true);
-    setError('');
-    try {
-      await updateBookingStatus(selected.id, nextStatus);
-      setSelected(null);
-      setNotice('Đã cập nhật trạng thái đơn hàng.');
-      resource.reload();
-    } catch (err) {
-      setError(apiError(err));
-    } finally {
-      setBusy(false);
-    }
-  }
+  const open = (booking) => { setNotice(''); setSelected(booking); };
 
   return (
     <>
@@ -154,12 +121,12 @@ export default function Bookings() {
                     <td>
                       <strong>
                         {booking.contact_name ||
-                          booking.users?.full_name ||
+                          booking.customer?.full_name ||
                           'Khách hàng'}
                       </strong>
                       <span className="table-subtitle">
                         {booking.contact_phone ||
-                          booking.users?.phone ||
+                          booking.customer?.phone ||
                           'Chưa có SĐT'}
                       </span>
                     </td>
@@ -200,89 +167,9 @@ export default function Bookings() {
           />
         )}
       </section>
-      {selected && (
-        <Modal
-          title="Chi tiết đơn hàng"
-          busy={busy}
-          onClose={() => setSelected(null)}
-        >
-          <p className="hf-muted break-word">Mã đơn: {selected.id}</p>
-          <StatusBadge status={selected.status} />
-          <dl className="booking-details">
-            <dt>Khách hàng</dt>
-            <dd>
-              {selected.contact_name || selected.users?.full_name || 'Chưa có'}
-            </dd>
-            <dt>Số điện thoại</dt>
-            <dd>
-              {selected.contact_phone || selected.users?.phone || 'Chưa có'}
-            </dd>
-            <dt>Dịch vụ</dt>
-            <dd>{selected.services?.name || 'Chưa có'}</dd>
-            <dt>Địa chỉ</dt>
-            <dd>{selected.address}</dd>
-            <dt>Lịch hẹn</dt>
-            <dd>
-              {selected.booking_type === 'immediate'
-                ? 'Gọi thợ ngay'
-                : dateLabel(selected.scheduled_at)}
-            </dd>
-            <dt>Ghi chú</dt>
-            <dd>{selected.description || 'Không có'}</dd>
-            <dt>Tổng tiền</dt>
-            <dd>{money(selected.total_price)}</dd>
-            <dt>Bảo hành đến</dt>
-            <dd>{selected.warranty_until || 'Chưa kích hoạt'}</dd>
-          </dl>
-          {error && (
-            <div className="hf-notice error" role="alert">
-              {error}
-            </div>
-          )}
-          {(nextStatuses[selected.status] || []).length ? (
-            <form onSubmit={save}>
-              <label className="hf-field">
-                Cập nhật trạng thái
-                <select
-                  required
-                  value={nextStatus}
-                  disabled={busy}
-                  onChange={(event) => setNextStatus(event.target.value)}
-                >
-                  <option value="">Chọn trạng thái mới</option>
-                  {nextStatuses[selected.status].map((key) => (
-                    <option key={key} value={key}>
-                      {BOOKING_STATUS[key]}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              {nextStatus && (
-                <p className="hf-hint">
-                  Xác nhận chuyển đơn sang “{BOOKING_STATUS[nextStatus]}”.
-                </p>
-              )}
-              <div className="modal-actions">
-                <button
-                  type="button"
-                  disabled={busy}
-                  className="hf-button secondary"
-                  onClick={() => setSelected(null)}
-                >
-                  Đóng
-                </button>
-                <button className="hf-button" disabled={busy || !nextStatus}>
-                  {busy ? 'Đang cập nhật…' : 'Xác nhận cập nhật'}
-                </button>
-              </div>
-            </form>
-          ) : (
-            <p className="hf-hint">
-              Đơn ở trạng thái này không có thao tác cập nhật thông thường.
-            </p>
-          )}
-        </Modal>
-      )}
+      {selected && <BookingEditor key={selected.id} id={selected.id}
+        onClose={() => setSelected(null)}
+        onSaved={(message) => { setSelected(null); setNotice(message); resource.reload(); }} />}
     </>
   );
 }

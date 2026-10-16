@@ -18,6 +18,7 @@ import Bookings from './pages/admin/Bookings';
 import AdminServices from './pages/admin/Services';
 import AdminUsers from './pages/admin/Users';
 import './styles/account.css';
+import './styles/analytics.css';
 
 export default function App() {
   return (

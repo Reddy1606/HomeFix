@@ -11,9 +11,15 @@ export const fetchAdminServices = (params, options = {}) =>
   apiClient
     .get('/admin/services', { ...options, params })
     .then((res) => res.data.data);
-export const updateBookingStatus = (id, status) =>
+export const fetchAdminBookingById = (id, options = {}) =>
+  apiClient.get(`/admin/bookings/${encodeURIComponent(id)}`, options)
+    .then((res) => res.data.data);
+export const updateBookingStatus = (id, status, technicianId) =>
   apiClient
-    .put(`/admin/bookings/${encodeURIComponent(id)}/status`, { status })
+    .put(`/admin/bookings/${encodeURIComponent(id)}/status`, {
+      status,
+      ...(technicianId && { technician_id: technicianId }),
+    })
     .then((res) => res.data.data);
 export const createService = (payload) =>
   apiClient.post('/admin/services', payload).then((res) => res.data.data);
