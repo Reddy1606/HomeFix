@@ -8,11 +8,8 @@ const USER_FIELDS =
   'customer:users!customer_id(id, full_name, email, phone), ' +
   'technician:users!technician_id(id, full_name, phone, rating_avg)';
 
-// Thông tin review đi kèm mỗi booking (nếu có)
-const REVIEW_FIELDS = 'reviews(id, rating, comment, created_at)';
-
-const WITH_SERVICE = `*, ${SERVICE_FIELDS}, ${REVIEW_FIELDS}`;
-const WITH_ALL = `*, ${SERVICE_FIELDS}, ${USER_FIELDS}, ${REVIEW_FIELDS}`;
+const WITH_SERVICE = `*, ${SERVICE_FIELDS}`;
+const WITH_ALL = `*, ${SERVICE_FIELDS}, ${USER_FIELDS}`;
 
 /**
  * Booking Model - Quản lý đơn đặt thợ sửa chữa
@@ -50,6 +47,13 @@ class Booking {
 
     if (error && error.code === 'PGRST116') return null;
     if (error) throw error;
+
+    if (data) {
+      const Review = require('./Review');
+      const rev = await Review.findByBookingId(id);
+      if (rev) data.reviews = rev;
+    }
+
     return data;
   }
 
@@ -76,6 +80,17 @@ class Booking {
 
     const { data, error, count } = await query;
     if (error) throw error;
+
+    if (Array.isArray(data)) {
+      const Review = require('./Review');
+      await Promise.all(
+        data.map(async (b) => {
+          const rev = await Review.findByBookingId(b.id);
+          if (rev) b.reviews = rev;
+        })
+      );
+    }
+
     return { bookings: data, total: count };
   }
 
