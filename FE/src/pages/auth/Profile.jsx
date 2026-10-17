@@ -527,33 +527,72 @@ export default function Profile() {
                     Chụp rõ nét mặt trước thẻ CCCD gắn chip (rõ số, không lóa sáng, không mất 4 góc).
                   </p>
 
-                  <div style={{ marginBottom: '14px' }}>
-                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 650, color: '#334155', marginBottom: '6px' }}>
                       Số CCCD (12 chữ số) <span style={{ color: '#ef4444' }}>*</span>
                     </label>
-                    <input
-                      className="hf-input"
-                      type="text"
-                      maxLength={12}
-                      placeholder="Nhập 12 chữ số CCCD (VD: 079xxxxxxxxx)"
-                      value={kycNumber}
-                      onChange={(e) => setKycNumber(e.target.value.replace(/\D/g, ''))}
-                    />
+                    <div style={{ position: 'relative' }}>
+                      <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '1.2rem', pointerEvents: 'none' }}>
+                        🪪
+                      </span>
+                      <input
+                        className="hf-input"
+                        type="text"
+                        maxLength={12}
+                        placeholder="Nhập 12 chữ số CCCD (VD: 079xxxxxxxxx)"
+                        value={kycNumber}
+                        onChange={(e) => setKycNumber(e.target.value.replace(/\D/g, ''))}
+                        style={{
+                          width: '100%',
+                          padding: '12px 14px 12px 42px',
+                          fontSize: '0.95rem',
+                          fontWeight: 600,
+                          color: '#0f172a',
+                          background: '#ffffff',
+                          border: '1.5px solid #cbd5e1',
+                          borderRadius: '10px',
+                          boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                        }}
+                      />
+                    </div>
                   </div>
 
-                  <div style={{ marginBottom: '14px' }}>
-                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>
+                  <div style={{ marginBottom: '18px' }}>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 650, color: '#334155', marginBottom: '6px' }}>
                       Ảnh chụp mặt trước CCCD <span style={{ color: '#ef4444' }}>*</span>
                     </label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleCccdFileChange}
-                      style={{ fontSize: '0.85rem' }}
-                    />
-                    <small style={{ display: 'block', color: '#94a3b8', marginTop: '4px' }}>
-                      Hỗ trợ định dạng JPG, PNG, WEBP (Tối đa 5MB)
-                    </small>
+                    <label
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        padding: '22px 16px',
+                        background: cccdFile ? '#f0fdf4' : '#f8fafc',
+                        border: `2px dashed ${cccdFile ? '#16a34a' : '#94a3b8'}`,
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        textAlign: 'center',
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleCccdFileChange}
+                        style={{ display: 'none' }}
+                      />
+                      <span style={{ fontSize: '2rem' }}>{cccdFile ? '✅' : '📷'}</span>
+                      <div>
+                        <span style={{ display: 'block', fontWeight: 700, fontSize: '0.92rem', color: cccdFile ? '#15803d' : '#1e293b' }}>
+                          {cccdFile ? `Đã chọn: ${cccdFile.name}` : 'Bấm vào đây để chọn tệp ảnh chụp thẻ CCCD'}
+                        </span>
+                        <span style={{ display: 'block', fontSize: '0.8rem', color: '#64748b', marginTop: '3px' }}>
+                          {cccdFile ? `${(cccdFile.size / (1024 * 1024)).toFixed(2)} MB · Bấm lại nếu muốn đổi ảnh khác` : 'Hỗ trợ định dạng JPG, PNG, WEBP (Tối đa 5MB)'}
+                        </span>
+                      </div>
+                    </label>
                   </div>
 
                   {/* Preview ảnh mới chọn */}
@@ -623,16 +662,42 @@ export default function Profile() {
                     Giấy chứng nhận đào tạo nghề, bằng cấp kỹ thuật hoặc phiếu xác nhận lý lịch tư pháp.
                   </p>
 
-                  <div style={{ marginBottom: '14px' }}>
-                    <input
-                      type="file"
-                      accept="image/*, application/pdf"
-                      onChange={(e) => setCertFile(e.target.files?.[0] || null)}
-                      style={{ fontSize: '0.85rem' }}
-                    />
-                    <small style={{ display: 'block', color: '#94a3b8', marginTop: '4px' }}>
-                      Hỗ trợ định dạng PDF, JPG, PNG (Tối đa 10MB)
-                    </small>
+                  <div style={{ marginBottom: '18px' }}>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 650, color: '#334155', marginBottom: '6px' }}>
+                      Tệp tài liệu chứng chỉ / xác nhận
+                    </label>
+                    <label
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        padding: '22px 16px',
+                        background: certFile ? '#f0fdf4' : '#f8fafc',
+                        border: `2px dashed ${certFile ? '#16a34a' : '#94a3b8'}`,
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        textAlign: 'center',
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      <input
+                        type="file"
+                        accept="image/*, application/pdf"
+                        onChange={(e) => setCertFile(e.target.files?.[0] || null)}
+                        style={{ display: 'none' }}
+                      />
+                      <span style={{ fontSize: '2rem' }}>{certFile ? '📑' : '📤'}</span>
+                      <div>
+                        <span style={{ display: 'block', fontWeight: 700, fontSize: '0.92rem', color: certFile ? '#15803d' : '#1e293b' }}>
+                          {certFile ? `Đã chọn: ${certFile.name}` : 'Bấm vào đây để tải lên tệp chứng chỉ (PDF hoặc Ảnh)'}
+                        </span>
+                        <span style={{ display: 'block', fontSize: '0.8rem', color: '#64748b', marginTop: '3px' }}>
+                          {certFile ? `${(certFile.size / (1024 * 1024)).toFixed(2)} MB · Bấm để chọn tệp khác` : 'Hỗ trợ định dạng PDF, JPG, PNG (Tối đa 10MB)'}
+                        </span>
+                      </div>
+                    </label>
                   </div>
 
                   {user?.criminal_record_url && (

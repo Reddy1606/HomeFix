@@ -120,11 +120,12 @@ button:disabled {
 .hf-field input,
 .hf-field select,
 .hf-field textarea,
+.hf-input,
 .admin-toolbar input,
 .admin-toolbar select {
   width: 100%;
   background: #fff;
-  border: 1px solid #cbd5e1;
+  border: 1.5px solid #cbd5e1;
   border-radius: 9px;
   padding: 11px 12px;
   font: inherit;
