@@ -2,17 +2,51 @@ import { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/auth';
 
-const NAV_LINKS = [
-  { to: '/', label: 'Trang chủ' },
-  { to: '/services', label: 'Dịch vụ' },
-  { to: '/booking', label: 'Đặt lịch' },
-  { to: '/my-bookings', label: 'Lịch sử đặt lịch' },
-  { to: '/register?role=technician', label: 'Đăng ký làm thợ' },
-  { to: '/#contact', label: 'Liên hệ' },
-];
+function getNavLinks(user) {
+  // 1. Quản trị viên
+  if (user?.role === 'admin') {
+    return [
+      { to: '/', label: 'Trang chủ' },
+      { to: '/admin', label: 'Bảng quản trị' },
+      { to: '/admin/bookings', label: 'Quản lý đơn' },
+      { to: '/admin/users', label: 'Quản lý tài khoản' },
+      { to: '/admin/services', label: 'Dịch vụ' },
+    ];
+  }
+
+  // 2. Thợ sửa chữa
+  if (user?.role === 'technician') {
+    return [
+      { to: '/', label: 'Trang chủ' },
+      { to: '/services', label: 'Bảng giá dịch vụ' },
+      { to: '/profile', label: 'Hồ sơ thợ (KYC)' },
+      { to: '/#contact', label: 'Hỗ trợ kỹ thuật' },
+    ];
+  }
+
+  // 3. Khách hàng đã đăng nhập
+  if (user?.role === 'customer') {
+    return [
+      { to: '/', label: 'Trang chủ' },
+      { to: '/services', label: 'Dịch vụ' },
+      { to: '/booking', label: 'Đặt lịch' },
+      { to: '/my-bookings', label: 'Lịch sử đặt lịch' },
+      { to: '/register?role=technician', label: 'Đăng ký làm thợ' },
+      { to: '/#contact', label: 'Liên hệ' },
+    ];
+  }
+
+  // 4. Khách chưa đăng nhập (Guest)
+  return [
+    { to: '/', label: 'Trang chủ' },
+    { to: '/services', label: 'Dịch vụ' },
+    { to: '/booking', label: 'Đặt lịch' },
+    { to: '/register?role=technician', label: 'Đăng ký làm thợ' },
+    { to: '/#contact', label: 'Liên hệ' },
+  ];
+}
 
 function NavItem({ to, label, onClick }) {
-  // Các mục trỏ tới anchor (ví dụ /#about) không dùng NavLink active state
   if (to.includes('#')) {
     return (
       <a
@@ -28,11 +62,11 @@ function NavItem({ to, label, onClick }) {
   return (
     <NavLink
       to={to}
-      end={to === '/'}
+      end={to === '/' || to === '/admin'}
       onClick={onClick}
       className={({ isActive }) =>
-        `block px-3 py-2 text-sm font-semibold md:px-0 ${
-          isActive ? 'text-brand-600' : 'text-gray-600 hover:text-brand-600'
+        `block px-3 py-2 text-sm font-semibold md:px-0 transition ${
+          isActive ? 'text-brand-600 font-bold' : 'text-gray-600 hover:text-brand-600'
         }`
       }
     >
@@ -46,6 +80,8 @@ export default function Header() {
   const { user, loading, logout } = useAuth();
   const closeMenu = () => setIsMenuOpen(false);
 
+  const navLinks = getNavLinks(user);
+
   return (
     <header className="sticky top-0 z-50 border-b border-gray-100 bg-white/95 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
@@ -58,41 +94,79 @@ export default function Header() {
           </span>
         </Link>
 
+        {/* Menu chính hiển thị phù hợp theo từng vai trò */}
         <nav className="hidden items-center gap-7 md:flex">
-          {NAV_LINKS.map((link) => (
+          {navLinks.map((link) => (
             <NavItem key={link.to} {...link} />
           ))}
         </nav>
 
+        {/* Khối hành động góc phải */}
         <div className="hidden items-center gap-3 md:flex">
-          {user?.role === 'admin' && (
-            <Link to="/admin" className="text-sm font-semibold text-brand-600">
-              Quản trị
-            </Link>
+          {user && (
+            <div className="flex items-center gap-1.5">
+              {user.role === 'admin' && (
+                <span className="rounded bg-rose-100 px-2 py-0.5 text-xs font-bold text-rose-700">
+                  Admin
+                </span>
+              )}
+              {user.role === 'technician' && (
+                <span
+                  className={`rounded px-2 py-0.5 text-xs font-bold ${
+                    user.is_verified
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : 'bg-amber-100 text-amber-800'
+                  }`}
+                >
+                  {user.is_verified ? 'Thợ' : 'Chờ KYC'}
+                </span>
+              )}
+            </div>
           )}
+
           <Link
             to={user ? '/profile' : '/login'}
             className="text-sm font-semibold text-gray-700 hover:text-brand-600"
           >
             {loading ? 'Đang tải…' : user ? 'Tài khoản' : 'Đăng nhập'}
           </Link>
+
           {user && (
             <button
               type="button"
-              className="text-sm font-semibold text-gray-600"
+              className="text-sm font-semibold text-gray-500 hover:text-rose-600 transition"
               onClick={logout}
             >
               Đăng xuất
             </button>
           )}
-          <Link
-            to="/booking"
-            className="rounded-full bg-accent-500 px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-accent-500/30 transition hover:scale-105 hover:bg-accent-600"
-          >
-            Gọi thợ ngay
-          </Link>
+
+          {/* Nút hành động nổi bật (CTA) theo từng role */}
+          {user?.role === 'admin' ? (
+            <Link
+              to="/admin"
+              className="rounded-full bg-slate-900 px-4 py-2 text-sm font-bold text-white shadow-md shadow-slate-900/20 transition hover:scale-105 hover:bg-slate-800"
+            >
+              👑 Quản trị
+            </Link>
+          ) : user?.role === 'technician' ? (
+            <Link
+              to="/profile"
+              className="rounded-full bg-brand-600 px-4 py-2 text-sm font-bold text-white shadow-md shadow-brand-500/30 transition hover:scale-105 hover:bg-brand-700"
+            >
+              🔧 {user.is_verified ? 'Hồ sơ Thợ' : 'Xác minh KYC'}
+            </Link>
+          ) : (
+            <Link
+              to="/booking"
+              className="rounded-full bg-accent-500 px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-accent-500/30 transition hover:scale-105 hover:bg-accent-600"
+            >
+              Gọi thợ ngay
+            </Link>
+          )}
         </div>
 
+        {/* Nút bật tắt menu Mobile */}
         <button
           type="button"
           className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 md:hidden"
@@ -135,22 +209,14 @@ export default function Header() {
         </button>
       </div>
 
+      {/* Menu Mobile theo từng vai trò */}
       {isMenuOpen && (
         <div className="border-t border-gray-100 bg-white md:hidden">
           <nav className="flex flex-col gap-1 px-4 py-3">
-            {NAV_LINKS.map((link) => (
+            {navLinks.map((link) => (
               <NavItem key={link.to} {...link} onClick={closeMenu} />
             ))}
             <div className="mt-2 flex flex-col gap-2 border-t border-gray-100 pt-3">
-              {user?.role === 'admin' && (
-                <Link
-                  to="/admin"
-                  onClick={closeMenu}
-                  className="px-3 py-2 text-sm font-semibold text-brand-600"
-                >
-                  Quản trị
-                </Link>
-              )}
               <Link
                 to={user ? '/profile' : '/login'}
                 onClick={closeMenu}
@@ -170,13 +236,31 @@ export default function Header() {
                   Đăng xuất
                 </button>
               )}
-              <Link
-                to="/booking"
-                onClick={closeMenu}
-                className="rounded-lg bg-accent-500 px-3 py-2 text-center text-sm font-semibold text-white"
-              >
-                Gọi thợ ngay
-              </Link>
+              {user?.role === 'admin' ? (
+                <Link
+                  to="/admin"
+                  onClick={closeMenu}
+                  className="rounded-lg bg-slate-900 px-3 py-2 text-center text-sm font-semibold text-white"
+                >
+                  👑 Quản trị
+                </Link>
+              ) : user?.role === 'technician' ? (
+                <Link
+                  to="/profile"
+                  onClick={closeMenu}
+                  className="rounded-lg bg-brand-600 px-3 py-2 text-center text-sm font-semibold text-white"
+                >
+                  🔧 {user.is_verified ? 'Hồ sơ Thợ' : 'Xác minh KYC'}
+                </Link>
+              ) : (
+                <Link
+                  to="/booking"
+                  onClick={closeMenu}
+                  className="rounded-lg bg-accent-500 px-3 py-2 text-center text-sm font-semibold text-white"
+                >
+                  Gọi thợ ngay
+                </Link>
+              )}
             </div>
           </nav>
         </div>
