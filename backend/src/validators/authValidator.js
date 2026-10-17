@@ -76,6 +76,12 @@ const updateProfileValidation = [
     .optional()
     .isURL()
     .withMessage('Avatar URL không hợp lệ.'),
+
+  body('cccd_number')
+    .optional()
+    .matches(/^[0-9]{9,12}$/)
+    .withMessage('Số CCCD phải từ 9-12 chữ số.')
+    .trim(),
 ];
 
 // Validate đổi mật khẩu

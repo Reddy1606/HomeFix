@@ -38,12 +38,25 @@ export default function Profile() {
   // State cho KYC thợ
   const [kycNumber, setKycNumber] = useState(user?.cccd_number || '');
   const [cccdFile, setCccdFile] = useState(null);
+  const [cccdPreview, setCccdPreview] = useState(null);
   const [certFile, setCertFile] = useState(null);
 
   const [errors, setErrors] = useState({});
   const [notice, setNotice] = useState(null);
   const [busy, setBusy] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
+
+  // Đồng bộ thông tin khi session user cập nhật
+  useEffect(() => {
+    if (user) {
+      setValues({
+        full_name: user.full_name || '',
+        phone: user.phone || '',
+        address: user.address || '',
+      });
+      setKycNumber(user.cccd_number || '');
+    }
+  }, [user]);
 
   // Đăng ký nâng cấp làm thợ sửa chữa
   const handleBecomeTechnician = async () => {
@@ -109,30 +122,63 @@ export default function Profile() {
     }
   };
 
+  // Xử lý chọn ảnh CCCD & preview
+  const handleCccdFileChange = (e) => {
+    const file = e.target.files?.[0] || null;
+    setCccdFile(file);
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setNotice({ type: 'error', text: 'Kích thước ảnh CCCD tối đa 5MB.' });
+        setCccdFile(null);
+        setCccdPreview(null);
+        return;
+      }
+      setCccdPreview(URL.createObjectURL(file));
+      setNotice(null);
+    } else {
+      setCccdPreview(null);
+    }
+  };
+
   // Upload KYC CCCD
   const handleUploadCccd = async (e) => {
     e.preventDefault();
-    if (!cccdFile) {
-      setNotice({ type: 'error', text: 'Vui lòng chọn ảnh CCCD.' });
+    const cleanNumber = kycNumber.trim();
+    if (cleanNumber && !/^\d{9,12}$/.test(cleanNumber)) {
+      setNotice({ type: 'error', text: 'Số CCCD phải gồm từ 9 đến 12 chữ số hợp lệ.' });
+      return;
+    }
+    if (!cccdFile && !user?.cccd_image) {
+      setNotice({ type: 'error', text: 'Vui lòng chọn ảnh chụp thẻ CCCD để tải lên.' });
       return;
     }
     setBusy(true);
     setNotice(null);
     try {
-      const res = await uploadKYC(cccdFile, {
-        type: 'cccd',
-        cccd_number: kycNumber,
-      });
-      setUser((prev) => ({
-        ...prev,
-        cccd_image: res.document_url,
-        cccd_number: kycNumber,
-      }));
-      setNotice({
-        type: 'success',
-        text: 'Đã tải lên ảnh CCCD thành công! Chờ Admin phê duyệt.',
-      });
-      setCccdFile(null);
+      if (cccdFile) {
+        const res = await uploadKYC(cccdFile, {
+          type: 'cccd',
+          cccd_number: cleanNumber,
+        });
+        setUser((prev) => ({
+          ...prev,
+          cccd_image: res.document_url,
+          cccd_number: cleanNumber,
+        }));
+        setNotice({
+          type: 'success',
+          text: 'Đã tải lên ảnh CCCD thành công! Hồ sơ đã được chuyển đến Admin để phê duyệt.',
+        });
+        setCccdFile(null);
+        setCccdPreview(null);
+      } else if (cleanNumber !== user?.cccd_number) {
+        const updated = await updateProfile({ cccd_number: cleanNumber });
+        setUser((prev) => ({ ...prev, ...updated, cccd_number: cleanNumber }));
+        setNotice({
+          type: 'success',
+          text: 'Đã cập nhật số CCCD thành công!',
+        });
+      }
     } catch (err) {
       setNotice({ type: 'error', text: apiError(err) });
     } finally {
@@ -144,7 +190,11 @@ export default function Profile() {
   const handleUploadCert = async (e) => {
     e.preventDefault();
     if (!certFile) {
-      setNotice({ type: 'error', text: 'Vui lòng chọn tệp chứng chỉ.' });
+      setNotice({ type: 'error', text: 'Vui lòng chọn tệp chứng chỉ / lý lịch tư pháp.' });
+      return;
+    }
+    if (certFile.size > 10 * 1024 * 1024) {
+      setNotice({ type: 'error', text: 'Kích thước tệp chứng chỉ tối đa 10MB.' });
       return;
     }
     setBusy(true);
@@ -403,113 +453,210 @@ export default function Profile() {
             {/* TAB KYC DÀNH CHO THỢ */}
             {tab === 'kyc' ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                {/* Trạng thái xác minh */}
                 <div
                   style={{
-                    padding: '16px',
-                    borderRadius: '10px',
-                    background: user?.is_verified ? '#f0fdf4' : '#fffbeb',
-                    border: `1px solid ${user?.is_verified ? '#bbf7d0' : '#fde68a'}`,
+                    padding: '16px 20px',
+                    borderRadius: '12px',
+                    background: user?.is_verified
+                      ? '#f0fdf4'
+                      : user?.cccd_image || user?.criminal_record_url || user?.cccd_number
+                      ? '#fffbeb'
+                      : '#f8fafc',
+                    border: `1px solid ${
+                      user?.is_verified
+                        ? '#bbf7d0'
+                        : user?.cccd_image || user?.criminal_record_url || user?.cccd_number
+                        ? '#fde68a'
+                        : '#e2e8f0'
+                    }`,
                   }}
                 >
-                  <strong>Trạng thái xác minh: </strong>
-                  {user?.is_verified ? (
-                    <span style={{ color: '#16a34a', fontWeight: 'bold' }}>
-                      ✅ Đã xác minh KYC (Đủ điều kiện nhận việc)
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '1rem', fontWeight: 700, color: '#334155' }}>
+                      Trạng thái xét duyệt:
                     </span>
-                  ) : (
-                    <span style={{ color: '#d97706', fontWeight: 'bold' }}>
-                      ⏳ Đang chờ Admin xét duyệt hồ sơ
-                    </span>
-                  )}
+                    {user?.is_verified ? (
+                      <span style={{ color: '#16a34a', fontWeight: 800 }}>
+                        ✅ ĐÃ XÁC MINH KYC
+                      </span>
+                    ) : user?.cccd_image || user?.criminal_record_url || user?.cccd_number ? (
+                      <span style={{ color: '#d97706', fontWeight: 800 }}>
+                        ⏳ ĐANG CHỜ ADMIN XÉT DUYỆT
+                      </span>
+                    ) : (
+                      <span style={{ color: '#64748b', fontWeight: 800 }}>
+                        ⚠️ CHƯA GỬI HỒ SƠ KYC
+                      </span>
+                    )}
+                  </div>
+                  <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>
+                    {user?.is_verified
+                      ? 'Hồ sơ của bạn đã được Admin phê duyệt. Bạn đã đủ điều kiện được giao đơn và nhận việc trên hệ thống HomeFix.'
+                      : user?.cccd_image || user?.criminal_record_url || user?.cccd_number
+                      ? 'Hồ sơ của bạn đã được gửi lên hệ thống. Quản trị viên HomeFix đang kiểm tra và sẽ phản hồi trong vòng 24 giờ.'
+                      : 'Vui lòng hoàn tất số CCCD và tải ảnh chụp giấy tờ bên dưới để Admin duyệt kích hoạt quyền nhận việc cho bạn.'}
+                  </p>
                 </div>
 
-                {/* Form upload CCCD */}
-                <form onSubmit={handleUploadCccd} style={{ padding: '16px', border: '1px solid #e2e8f0', borderRadius: '10px' }}>
-                  <h3 style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: '8px' }}>
-                    1. Căn cước công dân gắn chip (CCCD)
-                  </h3>
-                  <p className="hf-muted" style={{ fontSize: '0.82rem', marginBottom: '12px' }}>
-                    Chụp rõ nét mặt trước thẻ CCCD của bạn để xác thực danh tính.
+                {/* 1. Form upload CCCD */}
+                <form
+                  onSubmit={handleUploadCccd}
+                  style={{
+                    padding: '20px',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '12px',
+                    background: '#ffffff',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
+                    <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+                      1. Căn cước công dân gắn chip (CCCD)
+                    </h3>
+                    {user?.cccd_image ? (
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#16a34a', background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '2px 8px', borderRadius: '4px' }}>
+                        ✓ Đã có ảnh thẻ
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#f59e0b', background: '#fffbeb', border: '1px solid #fde68a', padding: '2px 8px', borderRadius: '4px' }}>
+                        Chưa có ảnh thẻ
+                      </span>
+                    )}
+                  </div>
+                  <p className="hf-muted" style={{ fontSize: '0.83rem', marginBottom: '16px' }}>
+                    Chụp rõ nét mặt trước thẻ CCCD gắn chip (rõ số, không lóa sáng, không mất 4 góc).
                   </p>
 
-                  <div style={{ marginBottom: '12px' }}>
-                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '4px' }}>
-                      Số CCCD (12 chữ số)
+                  <div style={{ marginBottom: '14px' }}>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>
+                      Số CCCD (12 chữ số) <span style={{ color: '#ef4444' }}>*</span>
                     </label>
                     <input
                       className="hf-input"
                       type="text"
                       maxLength={12}
-                      placeholder="079xxxxxxxx"
+                      placeholder="Nhập 12 chữ số CCCD (VD: 079xxxxxxxxx)"
                       value={kycNumber}
-                      onChange={(e) => setKycNumber(e.target.value)}
+                      onChange={(e) => setKycNumber(e.target.value.replace(/\D/g, ''))}
                     />
                   </div>
 
-                  <div style={{ marginBottom: '12px' }}>
-                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '4px' }}>
-                      Chọn ảnh mặt trước CCCD
+                  <div style={{ marginBottom: '14px' }}>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>
+                      Ảnh chụp mặt trước CCCD <span style={{ color: '#ef4444' }}>*</span>
                     </label>
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={(e) => setCccdFile(e.target.files?.[0] || null)}
+                      onChange={handleCccdFileChange}
+                      style={{ fontSize: '0.85rem' }}
                     />
+                    <small style={{ display: 'block', color: '#94a3b8', marginTop: '4px' }}>
+                      Hỗ trợ định dạng JPG, PNG, WEBP (Tối đa 5MB)
+                    </small>
                   </div>
 
-                  {user?.cccd_image && (
-                    <div style={{ marginBottom: '12px' }}>
-                      <span style={{ fontSize: '0.8rem', color: '#64748b', display: 'block', marginBottom: '4px' }}>
-                        Ảnh CCCD hiện tại:
+                  {/* Preview ảnh mới chọn */}
+                  {cccdPreview && (
+                    <div style={{ marginBottom: '16px', padding: '12px', background: '#f8fafc', borderRadius: '8px', border: '1px dashed #cbd5e1' }}>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#2563eb', display: 'block', marginBottom: '6px' }}>
+                        👁️ Xem trước ảnh vừa chọn:
                       </span>
                       <img
-                        src={user.cccd_image}
-                        alt="CCCD đã tải lên"
-                        style={{ maxHeight: '120px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                        src={cccdPreview}
+                        alt="Xem trước CCCD"
+                        style={{ maxHeight: '150px', borderRadius: '8px', border: '1px solid #94a3b8' }}
                       />
                     </div>
                   )}
 
-                  <button className="hf-button secondary small" type="submit" disabled={busy || !cccdFile}>
-                    {busy ? 'Đang tải lên...' : 'Tải lên CCCD'}
+                  {/* Ảnh CCCD đã nộp trên hệ thống */}
+                  {!cccdPreview && user?.cccd_image && (
+                    <div style={{ marginBottom: '16px', padding: '12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>
+                        Ảnh CCCD hiện tại:
+                      </span>
+                      <a href={user.cccd_image} target="_blank" rel="noreferrer" title="Click để xem ảnh lớn">
+                        <img
+                          src={user.cccd_image}
+                          alt="CCCD đã nộp"
+                          style={{ maxHeight: '130px', borderRadius: '8px', border: '1px solid #cbd5e1', cursor: 'pointer' }}
+                        />
+                      </a>
+                    </div>
+                  )}
+
+                  <button
+                    className="hf-button small"
+                    type="submit"
+                    disabled={busy || (!cccdFile && !user?.cccd_image && !kycNumber)}
+                  >
+                    {busy ? 'Đang lưu...' : '💾 Lưu & Gửi CCCD'}
                   </button>
                 </form>
 
-                {/* Form upload Chứng chỉ nghề */}
-                <form onSubmit={handleUploadCert} style={{ padding: '16px', border: '1px solid #e2e8f0', borderRadius: '10px' }}>
-                  <h3 style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: '8px' }}>
-                    2. Chứng chỉ tay nghề / Lý lịch tư pháp
-                  </h3>
-                  <p className="hf-muted" style={{ fontSize: '0.82rem', marginBottom: '12px' }}>
-                    Giấy chứng nhận đào tạo nghề, bằng cấp chuyên môn hoặc giấy xác nhận tư pháp.
+                {/* 2. Form upload Chứng chỉ nghề */}
+                <form
+                  onSubmit={handleUploadCert}
+                  style={{
+                    padding: '20px',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '12px',
+                    background: '#ffffff',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
+                    <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+                      2. Chứng chỉ tay nghề / Phiếu lý lịch tư pháp
+                    </h3>
+                    {user?.criminal_record_url ? (
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#16a34a', background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '2px 8px', borderRadius: '4px' }}>
+                        ✓ Đã có chứng chỉ
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#64748b', background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '2px 8px', borderRadius: '4px' }}>
+                        Tùy chọn
+                      </span>
+                    )}
+                  </div>
+                  <p className="hf-muted" style={{ fontSize: '0.83rem', marginBottom: '16px' }}>
+                    Giấy chứng nhận đào tạo nghề, bằng cấp kỹ thuật hoặc phiếu xác nhận lý lịch tư pháp.
                   </p>
 
-                  <div style={{ marginBottom: '12px' }}>
+                  <div style={{ marginBottom: '14px' }}>
                     <input
                       type="file"
                       accept="image/*, application/pdf"
                       onChange={(e) => setCertFile(e.target.files?.[0] || null)}
+                      style={{ fontSize: '0.85rem' }}
                     />
+                    <small style={{ display: 'block', color: '#94a3b8', marginTop: '4px' }}>
+                      Hỗ trợ định dạng PDF, JPG, PNG (Tối đa 10MB)
+                    </small>
                   </div>
 
                   {user?.criminal_record_url && (
-                    <div style={{ marginBottom: '12px' }}>
-                      <span style={{ fontSize: '0.8rem', color: '#64748b', display: 'block', marginBottom: '4px' }}>
-                        Tài liệu hiện tại:
+                    <div style={{ marginBottom: '16px', padding: '10px 14px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                      <span style={{ fontSize: '0.8rem', color: '#64748b', marginRight: '8px' }}>
+                        Tài liệu đã nộp:
                       </span>
                       <a
                         href={user.criminal_record_url}
                         target="_blank"
                         rel="noreferrer"
-                        style={{ color: '#2563eb', fontWeight: 600, fontSize: '0.85rem' }}
+                        style={{ color: '#2563eb', fontWeight: 700, fontSize: '0.85rem', textDecoration: 'underline' }}
                       >
-                        📄 Xem chứng chỉ đã nộp →
+                        📄 Mở xem chứng chỉ đã nộp ↗
                       </a>
                     </div>
                   )}
 
-                  <button className="hf-button secondary small" type="submit" disabled={busy || !certFile}>
-                    {busy ? 'Đang tải lên...' : 'Tải lên chứng chỉ'}
+                  <button
+                    className="hf-button secondary small"
+                    type="submit"
+                    disabled={busy || !certFile}
+                  >
+                    {busy ? 'Đang tải lên...' : '📤 Tải lên chứng chỉ'}
                   </button>
                 </form>
               </div>

@@ -353,7 +353,7 @@ export default function Users() {
                               >
                                 ✓ Đã duyệt
                               </span>
-                            ) : (
+                            ) : u.cccd_image || u.cccd_number || u.criminal_record_url ? (
                               <span
                                 style={{
                                   display: 'inline-flex',
@@ -368,7 +368,24 @@ export default function Users() {
                                   border: '1px solid #fde68a',
                                 }}
                               >
-                                ⏳ Chờ duyệt
+                                ⏳ Chờ duyệt KYC
+                              </span>
+                            ) : (
+                              <span
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 500,
+                                  color: '#64748b',
+                                  background: '#f1f5f9',
+                                  padding: '4px 8px',
+                                  borderRadius: '6px',
+                                  border: '1px solid #cbd5e1',
+                                }}
+                              >
+                                Chưa nộp hồ sơ
                               </span>
                             )
                           ) : (
@@ -520,8 +537,48 @@ export default function Users() {
               <>
                 <span style={{ color: '#64748b' }}>Xác minh KYC:</span>
                 <strong>
-                  {selectedUser.is_verified ? '✅ Đã xác minh đủ điều kiện nhận đơn' : '⏳ Chưa được duyệt hồ sơ'}
+                  {selectedUser.is_verified ? (
+                    <span style={{ color: '#16a34a' }}>✅ Đã xác minh đủ điều kiện nhận đơn</span>
+                  ) : selectedUser.cccd_image || selectedUser.cccd_number || selectedUser.criminal_record_url ? (
+                    <span style={{ color: '#d97706' }}>⏳ Đang chờ Admin duyệt hồ sơ</span>
+                  ) : (
+                    <span style={{ color: '#64748b' }}>⚠️ Thợ chưa gửi hồ sơ KYC</span>
+                  )}
                 </strong>
+
+                <span style={{ color: '#64748b' }}>Số CCCD:</span>
+                <span style={{ fontWeight: 600 }}>{selectedUser.cccd_number || 'Chưa cung cấp'}</span>
+
+                <span style={{ color: '#64748b' }}>Ảnh thẻ CCCD:</span>
+                <div>
+                  {selectedUser.cccd_image ? (
+                    <a href={selectedUser.cccd_image} target="_blank" rel="noreferrer" title="Click để mở ảnh kích thước lớn">
+                      <img
+                        src={selectedUser.cccd_image}
+                        alt="Ảnh CCCD"
+                        style={{ maxHeight: '100px', borderRadius: '6px', border: '1px solid #cbd5e1', cursor: 'pointer' }}
+                      />
+                    </a>
+                  ) : (
+                    <span style={{ color: '#94a3b8', fontStyle: 'italic' }}>Chưa tải lên ảnh</span>
+                  )}
+                </div>
+
+                <span style={{ color: '#64748b' }}>Chứng chỉ nghề:</span>
+                <div>
+                  {selectedUser.criminal_record_url ? (
+                    <a
+                      href={selectedUser.criminal_record_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ color: '#2563eb', fontWeight: 700, textDecoration: 'underline' }}
+                    >
+                      📄 Mở xem chứng chỉ đã nộp ↗
+                    </a>
+                  ) : (
+                    <span style={{ color: '#94a3b8', fontStyle: 'italic' }}>Chưa nộp chứng chỉ</span>
+                  )}
+                </div>
 
                 <span style={{ color: '#64748b' }}>Đánh giá thợ:</span>
                 <span>⭐ {selectedUser.rating_avg ? `${selectedUser.rating_avg} / 5` : 'Chưa có lượt đánh giá nào'}</span>

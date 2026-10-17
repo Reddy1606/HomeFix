@@ -46,7 +46,7 @@ class User {
   static async findById(id) {
     const { data, error } = await supabase
       .from('users')
-      .select('id, email, full_name, phone, role, address, avatar_url, is_verified, cccd_number, skill_verified, rating_avg, total_reviews, is_active, created_at, updated_at')
+      .select('id, email, full_name, phone, role, address, avatar_url, is_verified, cccd_number, cccd_image, criminal_record_url, skill_verified, rating_avg, total_reviews, is_active, created_at, updated_at')
       .eq('id', id)
       .single();
 
@@ -100,7 +100,7 @@ class User {
 
     let query = supabase
       .from('users')
-      .select('id, email, full_name, phone, role, address, is_verified, skill_verified, rating_avg, is_active, created_at', { count: 'exact' })
+      .select('id, email, full_name, phone, role, address, avatar_url, is_verified, cccd_number, cccd_image, criminal_record_url, skill_verified, rating_avg, is_active, created_at', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(from, to);
 

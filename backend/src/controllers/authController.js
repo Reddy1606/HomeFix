@@ -169,7 +169,7 @@ const updateMe = async (req, res, next) => {
     }
 
     // Chỉ cho phép cập nhật các trường an toàn
-    const allowedFields = ['full_name', 'phone', 'address', 'avatar_url'];
+    const allowedFields = ['full_name', 'phone', 'address', 'avatar_url', 'cccd_number'];
     const updateData = {};
     for (const field of allowedFields) {
       if (req.body[field] !== undefined) {
