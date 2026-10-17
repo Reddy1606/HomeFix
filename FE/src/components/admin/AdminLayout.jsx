@@ -16,7 +16,7 @@ export default function AdminLayout() {
     <div className="admin-app">
       <aside className="admin-sidebar">
         <Link to="/" className="admin-brand">
-          <span>H</span>HomeFix<span className="admin-tag">ADMIN</span>
+          <span>H</span>HomeFix<span className="admin-tag">{user?.role === 'staff' ? 'STAFF' : 'ADMIN'}</span>
         </Link>
         <p className="admin-nav-label">KHÔNG GIAN QUẢN TRỊ</p>
         <nav aria-label="Quản trị">

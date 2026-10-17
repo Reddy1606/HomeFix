@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
     phone           VARCHAR(15) UNIQUE,
     avatar_url      TEXT,
     role            VARCHAR(20) NOT NULL DEFAULT 'customer'
-                    CHECK (role IN ('customer', 'technician', 'admin')),
+                    CHECK (role IN ('customer', 'technician', 'admin', 'staff')),
     address         TEXT,
     is_verified     BOOLEAN DEFAULT FALSE,
     
@@ -146,3 +146,13 @@ CREATE POLICY "Service role can do everything on bookings" ON bookings
 
 CREATE POLICY "Service role can do everything on reviews" ON reviews
     FOR ALL USING (true) WITH CHECK (true);
+
+-- ==================== CẬP NHẬP ROLE CONSTRAINT (HỖ TRỢ STAFF) ====================
+DO $$
+BEGIN
+    ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+    ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('customer', 'technician', 'admin', 'staff'));
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END $$;
+

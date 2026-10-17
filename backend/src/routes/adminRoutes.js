@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getAllUsers, getUserById, verifyUser, toggleUserStatus } = require('../controllers/userController');
+const { getAllUsers, getUserById, verifyUser, toggleUserStatus, updateUserRole } = require('../controllers/userController');
 const authenticate = require('../middlewares/authMiddleware');
 const authorize = require('../middlewares/roleMiddleware');
 const validate = require('../middlewares/validate');
@@ -29,9 +29,9 @@ const {
   updateBookingStatusValidation,
 } = require('../validators/bookingValidator');
 
-// Tất cả routes dưới đây yêu cầu: đăng nhập + role admin
+// Tất cả routes dưới đây yêu cầu: đăng nhập + role admin hoặc staff
 router.use(authenticate);
-router.use(authorize('admin'));
+router.use(authorize('admin', 'staff'));
 
 // GET /api/admin/dashboard - Thống kê tổng quan nền tảng
 router.get('/dashboard', getDashboardStats);
@@ -45,8 +45,11 @@ router.get('/users/:id', getUserById);
 // PUT /api/admin/users/:id/verify - Xác minh thợ (KYC)
 router.put('/users/:id/verify', verifyUser);
 
-// PUT /api/admin/users/:id/status - Khóa / mở khóa tài khoản
-router.put('/users/:id/status', toggleUserStatus);
+// PUT /api/admin/users/:id/status - Khóa / mở khóa tài khoản (Chỉ admin)
+router.put('/users/:id/status', authorize('admin'), toggleUserStatus);
+
+// PUT /api/admin/users/:id/role - Điều chỉnh vai trò người dùng (Chỉ admin)
+router.put('/users/:id/role', authorize('admin'), updateUserRole);
 
 // ==================== QUẢN LÝ DỊCH VỤ ====================
 

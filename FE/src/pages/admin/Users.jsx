@@ -4,6 +4,7 @@ import {
   fetchAdminUsers,
   verifyTechnician,
   toggleUserStatus,
+  updateUserRole,
 } from '../../api/admin';
 import useAdminResource from '../../hooks/useAdminResource';
 import {
@@ -16,7 +17,15 @@ import { dateLabel } from '../../utils/admin';
 const ROLE_LABELS = {
   customer: { label: 'Khách hàng', color: '#0284c7', bg: '#f0f9ff' },
   technician: { label: 'Thợ sửa chữa', color: '#d97706', bg: '#fffbeb' },
+  staff: { label: 'Nhân viên (Staff)', color: '#0d9488', bg: '#f0fdfa' },
   admin: { label: 'Quản trị viên', color: '#7c3aed', bg: '#f5f3ff' },
+};
+
+const ROLE_DESCRIPTIONS = {
+  customer: 'Khách hàng sử dụng dịch vụ, đặt lịch và thanh toán.',
+  technician: 'Thợ sửa chữa tiếp nhận đơn, thực hiện công việc và hoàn tất KYC.',
+  staff: 'Nhân viên vận hành, quản lý điều phối đơn hàng và chăm sóc khách hàng.',
+  admin: 'Quản trị viên cấp cao, toàn quyền quản trị tài khoản và cấu hình hệ thống.',
 };
 
 export default function Users() {
@@ -37,6 +46,8 @@ export default function Users() {
   const pagination = resource.data?.pagination || null;
 
   const [selectedUser, setSelectedUser] = useState(null);
+  const [roleModalUser, setRoleModalUser] = useState(null);
+  const [selectedRole, setSelectedRole] = useState('');
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
@@ -101,9 +112,39 @@ export default function Users() {
     }
   };
 
+  const handleOpenRoleModal = (user) => {
+    setRoleModalUser(user);
+    setSelectedRole(user.role);
+    setError('');
+  };
+
+  const handleUpdateRole = async (user, targetRole) => {
+    if (!targetRole || targetRole === user.role) return;
+    const targetLabel = ROLE_LABELS[targetRole]?.label || targetRole;
+    if (!window.confirm(`Bạn có chắc chắn muốn chuyển vai trò của "${user.full_name}" sang "${targetLabel}" không?`)) return;
+
+    setBusy(true);
+    setNotice('');
+    setError('');
+    try {
+      await updateUserRole(user.id, targetRole);
+      setNotice(`Đã đổi vai trò của "${user.full_name}" sang "${targetLabel}" thành công!`);
+      if (selectedUser?.id === user.id) {
+        setSelectedUser((prev) => ({ ...prev, role: targetRole }));
+      }
+      setRoleModalUser(null);
+      resource.reload();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Có lỗi xảy ra khi cập nhật vai trò.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   // Tính số liệu nhanh trên trang hiện tại
   const countCustomer = users.filter((u) => u.role === 'customer').length;
   const countTech = users.filter((u) => u.role === 'technician').length;
+  const countStaff = users.filter((u) => u.role === 'staff').length;
   const countVerified = users.filter((u) => u.role === 'technician' && u.is_verified).length;
 
   return (
@@ -112,7 +153,7 @@ export default function Users() {
         <div>
           <span className="hf-eyebrow">QUẢN TRỊ TÀI KHOẢN</span>
           <h1>Quản lý người dùng</h1>
-          <p>Danh sách khách hàng, thợ sửa chữa, xác minh hồ sơ KYC và phân quyền hệ thống.</p>
+          <p>Danh sách khách hàng, thợ sửa chữa, nhân viên (Staff), xác minh hồ sơ KYC và phân quyền hệ thống.</p>
         </div>
         <button
           className="hf-button secondary"
@@ -162,10 +203,10 @@ export default function Users() {
 
         <article className="hf-card stat-card">
           <div>
-            <p>Thợ đã xác minh KYC</p>
-            <strong>{countVerified}</strong>
+            <p>Nhân viên Staff (trang này)</p>
+            <strong>{countStaff}</strong>
           </div>
-          <span className="stat-icon" style={{ background: '#f0fdf4', color: '#16a34a' }}>✓</span>
+          <span className="stat-icon" style={{ background: '#f0fdfa', color: '#0d9488' }}>🛡️</span>
         </article>
       </div>
 
@@ -190,6 +231,7 @@ export default function Users() {
               <option value="">Tất cả vai trò</option>
               <option value="customer">Khách hàng</option>
               <option value="technician">Thợ sửa chữa</option>
+              <option value="staff">Nhân viên (Staff)</option>
               <option value="admin">Quản trị viên</option>
             </select>
           </label>
@@ -368,6 +410,21 @@ export default function Users() {
                               Chi tiết
                             </button>
 
+                            <button
+                              type="button"
+                              disabled={busy}
+                              className="hf-button secondary small"
+                              style={{
+                                color: '#0d9488',
+                                borderColor: '#99f6e4',
+                                background: '#f0fdfa',
+                                fontWeight: 600,
+                              }}
+                              onClick={() => handleOpenRoleModal(u)}
+                            >
+                              🛡️ Phân quyền
+                            </button>
+
                             {u.role === 'technician' && (
                               <button
                                 type="button"
@@ -435,7 +492,7 @@ export default function Users() {
             <span>{selectedUser.address || 'Chưa cập nhật địa chỉ'}</span>
 
             <span style={{ color: '#64748b' }}>Vai trò:</span>
-            <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
               <span
                 style={{
                   display: 'inline-block',
@@ -449,6 +506,18 @@ export default function Users() {
               >
                 {ROLE_LABELS[selectedUser.role]?.label || selectedUser.role}
               </span>
+              <button
+                type="button"
+                className="hf-button secondary small"
+                style={{ padding: '2px 8px', fontSize: '0.75rem', color: '#0d9488', borderColor: '#99f6e4' }}
+                onClick={() => {
+                  const target = selectedUser;
+                  setSelectedUser(null);
+                  handleOpenRoleModal(target);
+                }}
+              >
+                Đổi vai trò →
+              </button>
             </div>
 
             {selectedUser.role === 'technician' && (
@@ -491,6 +560,93 @@ export default function Users() {
               onClick={() => setSelectedUser(null)}
             >
               Đóng
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {/* Modal điều chỉnh phân quyền (Set role cho staff/admin/technician/customer) */}
+      {roleModalUser && (
+        <Modal
+          title={`Phân quyền tài khoản: ${roleModalUser.full_name || roleModalUser.email}`}
+          onClose={() => setRoleModalUser(null)}
+        >
+          <p style={{ color: '#64748b', fontSize: '0.88rem', marginBottom: '16px' }}>
+            Chọn vai trò mới cho tài khoản. Nhân viên (Staff) có quyền truy cập vào bảng quản trị để xem và điều phối đơn hàng.
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {Object.entries(ROLE_LABELS).map(([rKey, rInfo]) => {
+              const isCurrent = roleModalUser.role === rKey;
+              const isSelected = selectedRole === rKey;
+              return (
+                <label
+                  key={rKey}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '12px',
+                    padding: '12px 14px',
+                    borderRadius: '8px',
+                    border: `2px solid ${isSelected ? rInfo.color : '#e2e8f0'}`,
+                    background: isSelected ? rInfo.bg : '#ffffff',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="roleSelection"
+                    value={rKey}
+                    checked={isSelected}
+                    onChange={() => setSelectedRole(rKey)}
+                    style={{ marginTop: '3px' }}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <strong style={{ color: rInfo.color, fontSize: '0.92rem' }}>
+                        {rInfo.label}
+                      </strong>
+                      {isCurrent && (
+                        <span
+                          style={{
+                            fontSize: '0.7rem',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            background: '#e2e8f0',
+                            color: '#475569',
+                            fontWeight: 600,
+                          }}
+                        >
+                          Hiện tại
+                        </span>
+                      )}
+                    </div>
+                    <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: '#64748b' }}>
+                      {ROLE_DESCRIPTIONS[rKey]}
+                    </p>
+                  </div>
+                </label>
+              );
+            })}
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+            <button
+              type="button"
+              className="hf-button secondary"
+              onClick={() => setRoleModalUser(null)}
+              disabled={busy}
+            >
+              Hủy
+            </button>
+            <button
+              type="button"
+              className="hf-button"
+              disabled={busy || selectedRole === roleModalUser.role}
+              onClick={() => handleUpdateRole(roleModalUser, selectedRole)}
+            >
+              {busy ? 'Đang cập nhật…' : `Lưu thành ${ROLE_LABELS[selectedRole]?.label || selectedRole}`}
             </button>
           </div>
         </Modal>

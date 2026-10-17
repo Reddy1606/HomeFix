@@ -144,9 +144,61 @@ const toggleUserStatus = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Cập nhật vai trò (Role) của người dùng (Admin only)
+ * @route   PUT /api/admin/users/:id/role
+ * @access  Private (Admin only)
+ */
+const updateUserRole = async (req, res, next) => {
+  try {
+    const { role } = req.body;
+    const allowedRoles = ['customer', 'technician', 'staff', 'admin'];
+
+    if (!role || !allowedRoles.includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: `Vai trò "${role}" không hợp lệ. Cho phép: ${allowedRoles.join(', ')}.`,
+      });
+    }
+
+    const existingUser = await User.findById(req.params.id);
+    if (!existingUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy người dùng.',
+      });
+    }
+
+    // Không cho phép admin tự giáng quyền của chính mình
+    if (existingUser.id === req.user.id && role !== 'admin') {
+      return res.status(400).json({
+        success: false,
+        message: 'Không thể tự giáng quyền quản trị viên của chính mình.',
+      });
+    }
+
+    const user = await User.update(req.params.id, { role });
+
+    res.status(200).json({
+      success: true,
+      message: `Đã cập nhật vai trò người dùng thành "${role}".`,
+      data: { user },
+    });
+  } catch (error) {
+    if (error.code === '23514') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cơ sở dữ liệu Supabase cần cập nhật ràng buộc role để cho phép "staff". Vui lòng kiểm tra migration.sql.',
+      });
+    }
+    next(error);
+  }
+};
+
 module.exports = {
   getAllUsers,
   getUserById,
   verifyUser,
   toggleUserStatus,
+  updateUserRole,
 };

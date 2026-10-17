@@ -49,3 +49,9 @@ export const toggleUserStatus = (id, is_active) =>
     .put(`/admin/users/${encodeURIComponent(id)}/status`, { is_active })
     .then((res) => res.data.data?.user);
 
+export const updateUserRole = (id, role) =>
+  apiClient
+    .put(`/admin/users/${encodeURIComponent(id)}/role`, { role })
+    .then((res) => res.data.data?.user);
+
+
