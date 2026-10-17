@@ -19,6 +19,7 @@ import Bookings from './pages/admin/Bookings';
 import AdminServices from './pages/admin/Services';
 import AdminUsers from './pages/admin/Users';
 import './styles/account.css';
+import './styles/analytics.css';
 
 export default function App() {
   return (
@@ -43,19 +44,19 @@ export default function App() {
               <Route path="/my-bookings/:id" element={<BookingDetail />} />
             </Route>
 
+          <Route path="*" element={<NotFound />} />
+        </Route>
+        <Route element={<ProtectedRoute adminOnly />}>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="bookings" element={<Bookings />} />
+            <Route path="services" element={<AdminServices />} />
+            <Route path="users" element={<AdminUsers />} />
             <Route path="*" element={<NotFound />} />
           </Route>
-          <Route element={<ProtectedRoute adminOnly />}>
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<Dashboard />} />
-              <Route path="bookings" element={<Bookings />} />
-              <Route path="services" element={<AdminServices />} />
-              <Route path="users" element={<AdminUsers />} />
-              <Route path="*" element={<NotFound />} />
-            </Route>
-          </Route>
-        </Routes>
-      </ToastProvider>
-    </AuthProvider>
-  );
+        </Route>
+      </Routes>
+    </ToastProvider>
+  </AuthProvider>
+);
 }

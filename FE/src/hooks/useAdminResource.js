@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { apiError } from '../utils/validation';
+import { AdminDataError } from '../utils/adminAnalytics';
 
 export default function useAdminResource(fetcher, params = {}) {
   const key = JSON.stringify(params);
@@ -21,7 +22,7 @@ export default function useAdminResource(fetcher, params = {}) {
           setState({
             data: null,
             loading: false,
-            error:
+            error: error instanceof AdminDataError ? error.message :
               error.response?.status === 404
                 ? 'Chức năng quản trị chưa sẵn sàng trên máy chủ. Vui lòng thử lại sau.'
                 : apiError(error),

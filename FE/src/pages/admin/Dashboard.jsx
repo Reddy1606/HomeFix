@@ -1,12 +1,12 @@
 import { Link } from 'react-router-dom';
-import { fetchDashboard } from '../../api/admin';
+import { loadDashboard } from '../../api/adminData';
+import DashboardCharts from '../../components/admin/DashboardCharts';
 import useAdminResource from '../../hooks/useAdminResource';
 import { ResourceState, StatusBadge } from '../../components/admin/AdminUI';
-import { BOOKING_STATUS, dateLabel } from '../../utils/admin';
+import { dateLabel, money } from '../../utils/admin';
 
-const load = (_, options) => fetchDashboard(options);
 export default function Dashboard() {
-  const resource = useAdminResource(load);
+  const resource = useAdminResource(loadDashboard);
   const data = resource.data;
   return (
     <>
@@ -65,7 +65,12 @@ export default function Dashboard() {
               </article>
             ))}
           </div>
-          <div className="dashboard-columns">
+          <div className="revenue-totals">
+            <article className="hf-card"><span>Giá trị đơn hoàn thành · toàn thời gian</span><strong>{money(data.revenue)}</strong></article>
+            <article className="hf-card"><span>Hoa hồng 15% ước tính · toàn thời gian</span><strong>{money(data.commission)}</strong></article>
+          </div>
+          <DashboardCharts data={data} />
+          <div className="dashboard-recent">
             <section className="hf-card">
               <div className="card-heading">
                 <h2>Đơn hàng gần đây</h2>
@@ -87,7 +92,7 @@ export default function Dashboard() {
                           <td>
                             <strong>
                               {booking.contact_name ||
-                                booking.users?.full_name ||
+                                booking.customer?.full_name ||
                                 'Khách hàng'}
                             </strong>
                             <span className="table-subtitle">
@@ -106,25 +111,6 @@ export default function Dashboard() {
               ) : (
                 <div className="resource-state">Chưa có đơn hàng gần đây.</div>
               )}
-            </section>
-            <section className="hf-card status-summary">
-              <h2>Phân bố trạng thái</h2>
-              <p className="hf-muted">Số đơn theo từng giai đoạn.</p>
-              {Object.entries(BOOKING_STATUS).map(([status, label]) => (
-                <div className="status-summary-row" key={status}>
-                  <span>
-                    <i className={`status-dot status-${status}`} />
-                    {label}
-                  </span>
-                  <strong>{data.status_counts?.[status] ?? '—'}</strong>
-                </div>
-              ))}
-              <Link
-                to="/admin/bookings?status=pending"
-                className="hf-button secondary full"
-              >
-                Xem đơn chờ xử lý →
-              </Link>
             </section>
           </div>
           <div className="admin-callout">
