@@ -66,7 +66,7 @@ class User {
       .from('users')
       .update({ ...updateData, updated_at: new Date().toISOString() })
       .eq('id', id)
-      .select('id, email, full_name, phone, role, address, avatar_url, is_verified, is_active, updated_at')
+      .select('id, email, full_name, phone, role, address, avatar_url, cccd_number, cccd_image, criminal_record_url, is_verified, skill_verified, is_active, updated_at')
       .single();
 
     if (error) throw error;

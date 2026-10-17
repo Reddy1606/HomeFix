@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const path = require('path');
 const config = require('./config/env');
 const { testConnection } = require('./config/database');
 const { errorHandler, notFound } = require('./middlewares/errorHandler');
@@ -10,14 +11,15 @@ const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const serviceRoutes = require('./routes/serviceRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
+const uploadRoutes = require('./routes/uploadRoutes');
 
 // Khởi tạo Express app
 const app = express();
 
 // ==================== GLOBAL MIDDLEWARES ====================
 
-// Bảo mật HTTP headers
-app.use(helmet());
+// Bảo mật HTTP headers (cho phép cross-origin để load ảnh tĩnh)
+app.use(helmet({ crossOriginResourcePolicy: false }));
 
 // Cho phép CORS (Cross-Origin Resource Sharing)
 app.use(cors({
@@ -25,6 +27,9 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+
+// Phục vụ tệp tĩnh tải lên (local fallback storage)
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
 // Parse JSON body
 app.use(express.json({ limit: '10mb' }));
@@ -55,6 +60,9 @@ app.use('/api/bookings', bookingRoutes);
 
 // Admin routes
 app.use('/api/admin', adminRoutes);
+
+// Upload routes (avatar, kyc, services)
+app.use('/api/upload', uploadRoutes);
 
 // ==================== ERROR HANDLING ====================
 

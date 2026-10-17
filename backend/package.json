@@ -6,9 +6,10 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
-    "test": "node src/test/testAuth.js && node src/test/testBackend2.js",
+    "test": "node src/test/testAuth.js && node src/test/testBackend2.js && node src/test/testUpload.js",
     "test:auth": "node src/test/testAuth.js",
     "test:be2": "node src/test/testBackend2.js",
+    "test:upload": "node src/test/testUpload.js",
     "seed": "node src/database/seed.js"
   },
   "keywords": [],
@@ -26,7 +27,8 @@
     "express": "^5.3.0",
     "express-validator": "^7.3.2",
     "helmet": "^8.3.0",
-    "jsonwebtoken": "^9.0.3"
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.4.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
