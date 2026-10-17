@@ -381,6 +381,66 @@ server.listen(PORT, async () => {
     });
     assert(r.status === 404, 'POST /api/bookings - Không đặt được dịch vụ đã ngừng cung cấp (HTTP 404)');
 
+    // ==================== 7. REVIEWS (ĐÁNH GIÁ & PHẢN HỒI) ====================
+    // 7.1. Đánh giá khi chưa đăng nhập
+    r = await call('POST', `/api/bookings/${booking.id}/review`, { body: { rating: 5, comment: 'Rất tốt' } });
+    assert(r.status === 401, 'POST /api/bookings/:id/review - Chưa đăng nhập bị từ chối (HTTP 401)');
+
+    // 7.2. Admin không được đánh giá đơn (chỉ role customer)
+    r = await call('POST', `/api/bookings/${booking.id}/review`, { token: adminToken, body: { rating: 5, comment: 'Admin đánh giá' } });
+    assert(r.status === 403, 'POST /api/bookings/:id/review - Admin không được đánh giá (HTTP 403)');
+
+    // 7.3. Khách hàng khác không được đánh giá đơn của người khác
+    r = await call('POST', `/api/bookings/${booking.id}/review`, { token: customer2.token, body: { rating: 5, comment: 'Khách 2 đánh giá trộm' } });
+    assert(r.status === 403, 'POST /api/bookings/:id/review - Khách hàng khác không được đánh giá đơn người khác (HTTP 403)');
+
+    // 7.4. Đánh giá đơn chưa completed (ví dụ đơn scheduledBooking đã bị hủy / cancelled)
+    r = await call('POST', `/api/bookings/${scheduledBooking.id}/review`, { token: customer.token, body: { rating: 5 } });
+    assert(r.status === 400, 'POST /api/bookings/:id/review - Không được đánh giá đơn chưa completed (HTTP 400)');
+
+    // 7.5. Rating không hợp lệ (< 1 hoặc > 5 hoặc không phải số)
+    r = await call('POST', `/api/bookings/${booking.id}/review`, { token: customer.token, body: { rating: 6, comment: 'Quá 5 sao' } });
+    assert(r.status === 400 && r.body.errors?.some((e) => e.field === 'rating'),
+      'POST /api/bookings/:id/review - Rating > 5 bị từ chối (HTTP 400)');
+
+    r = await call('POST', `/api/bookings/${booking.id}/review`, { token: customer.token, body: { rating: 0 } });
+    assert(r.status === 400 && r.body.errors?.some((e) => e.field === 'rating'),
+      'POST /api/bookings/:id/review - Rating = 0 bị từ chối (HTTP 400)');
+
+    // 7.6. Đánh giá hợp lệ lần đầu (đơn booking đã ở trạng thái completed ở phần 5)
+    r = await call('POST', `/api/bookings/${booking.id}/review`, {
+      token: customer.token,
+      body: { rating: 5, comment: 'Thợ sửa máy lạnh rất tận tình, giá đúng niêm yết!' },
+    });
+    assert(r.status === 201 && r.body.data?.review?.rating === 5 && r.body.data?.review?.booking_id === booking.id,
+      'POST /api/bookings/:id/review - Đánh giá 5 sao thành công (HTTP 201)');
+
+    // 7.7. Chặn đánh giá lần 2 trên cùng 1 đơn
+    r = await call('POST', `/api/bookings/${booking.id}/review`, {
+      token: customer.token,
+      body: { rating: 4, comment: 'Đánh giá lần 2' },
+    });
+    assert(r.status === 400, 'POST /api/bookings/:id/review - Chặn spam đánh giá 2 lần (HTTP 400)');
+
+    // 7.8. Kiểm tra chi tiết đơn trả về kèm thông tin review và cờ can_review = false
+    r = await call('GET', `/api/bookings/${booking.id}`, { token: customer.token });
+    assert(r.status === 200 && r.body.data.booking.can_review === false && !!r.body.data.booking.reviews,
+      'GET /api/bookings/:id - Đã có review thì can_review = false và có reviews');
+
+    // ==================== 8. DASHBOARD (DOANH THU & HOA HỒNG 15%) ====================
+    // 8.1. Khách hàng không có quyền xem dashboard admin
+    r = await call('GET', '/api/admin/dashboard', { token: customer.token });
+    assert(r.status === 403, 'GET /api/admin/dashboard - Customer bị từ chối (HTTP 403)');
+
+    // 8.2. Admin xem dashboard
+    r = await call('GET', '/api/admin/dashboard', { token: adminToken });
+    const dash = r.body?.data;
+    assert(r.status === 200 && dash?.total_bookings >= 2 &&
+      dash?.revenue && dash.revenue.commission_rate === 0.15 &&
+      dash.revenue.total_revenue > 0 && dash.revenue.total_commission > 0 &&
+      dash.status_counts && dash.status_counts.completed >= 1,
+      'GET /api/admin/dashboard - Thống kê doanh thu, hoa hồng 15% và tỷ lệ trạng thái đơn đầy đủ');
+
     console.log('\n--------------------------------------------------');
     console.log(`Kết quả: ${passed} Passed | ${failed} Failed`);
     console.log('==================================================\n');

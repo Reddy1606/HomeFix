@@ -106,6 +106,8 @@ const startServer = async () => {
     console.log('║  GET    /api/bookings/my                     ║');
     console.log('║  GET    /api/bookings/:id                    ║');
     console.log('║  PUT    /api/bookings/:id/cancel             ║');
+    console.log('║  POST   /api/bookings/:id/review             ║');
+    console.log('║  GET    /api/admin/dashboard (Revenue & %)   ║');
     console.log('║  *      /api/admin/services (CRUD)           ║');
     console.log('║  *      /api/admin/bookings (+ /:id/status)  ║');
     console.log('╚═══════════════════════════════════════════════╝');

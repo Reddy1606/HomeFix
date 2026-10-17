@@ -20,6 +20,8 @@ Test nhanh: import `HomeFix_Backend2_Postman_Collection.json` vào Postman.
 | GET | `/bookings/my` | Customer | FE2 |
 | GET | `/bookings/:id` | Customer (đơn của mình) / Admin | FE2, FE3 |
 | PUT | `/bookings/:id/cancel` | Customer | FE2 |
+| POST | `/bookings/:id/review` | Customer (khi đơn completed) | FE2 |
+| GET | `/admin/dashboard` | Admin (Thống kê & Doanh thu 15%) | FE3 |
 | GET | `/admin/services` | Admin | FE3 |
 | POST | `/admin/services` | Admin | FE3 |
 | GET | `/admin/services/:id` | Admin | FE3 |
@@ -149,6 +151,44 @@ Trả `data.booking`, kèm:
 ### `PUT /bookings/:id/cancel` - Khách tự hủy
 Chỉ hủy được khi `pending` hoặc `confirmed`. Trạng thái khác → `400` kèm thông báo tiếng Việt. Không cần body.
 
+### `POST /bookings/:id/review` - Đánh giá & phản hồi thợ (Mới)
+Dành cho **Frontend 2** làm Modal đánh giá khi đơn hàng chuyển sang trạng thái `completed`.
+
+**Yêu cầu:**
+- Token đăng nhập của khách hàng sở hữu đơn hàng (Role: `customer`).
+- Đơn hàng phải ở trạng thái `completed`.
+- Mỗi đơn chỉ được đánh giá 1 lần (tránh spam).
+
+**Request Body:**
+```json
+{
+  "rating": 5,
+  "comment": "Thợ sửa rất chuyên nghiệp, xử lý sự cố nhanh và sạch sẽ!"
+}
+```
+| Trường | Bắt buộc | Kiểu | Mô tả |
+|---|---|---|---|
+| `rating` | ✅ | Số nguyên (1 - 5) | Điểm số đánh giá từ 1 đến 5 sao |
+| `comment` | Tùy chọn | String | Nhận xét chi tiết (tối đa 1000 ký tự) |
+
+**Response (HTTP 201):**
+```json
+{
+  "success": true,
+  "message": "Đánh giá đơn hàng thành công! Cảm ơn phản hồi của bạn.",
+  "data": {
+    "review": {
+      "id": "uuid",
+      "booking_id": "uuid",
+      "rating": 5,
+      "comment": "Thợ sửa rất chuyên nghiệp, xử lý sự cố nhanh và sạch sẽ!",
+      "created_at": "2026-10-16T08:00:00Z"
+    }
+  }
+}
+```
+*Lưu ý:* Hệ thống tự động tính lũy tiến `rating_avg` và tăng `total_reviews` cho hồ sơ của thợ phụ trách đơn hàng này. Đồng thời, API `GET /bookings/:id` sẽ trả về `can_review: false` sau khi đã đánh giá.
+
 ---
 
 ## 3. Trạng thái đơn
@@ -221,6 +261,54 @@ Trả `data.booking` + `data.allowed_next_statuses`.
 - `status` bắt buộc, phải là bước chuyển hợp lệ (bảng mục 3).
 - `technician_id` tùy chọn: phải là tài khoản `technician` đang hoạt động và **đã xác minh KYC**. Lấy danh sách thợ bằng `GET /admin/users?role=technician` (API của Backend 1, dùng `is_verified` để lọc).
 - Nếu hai admin cùng đổi một đơn → người đến sau nhận `409` ("Vui lòng tải lại").
+
+### `GET /admin/dashboard` - Thống kê tổng quan & Doanh thu hoa hồng (Mới)
+Dành cho **Frontend 3** vẽ biểu đồ thống kê, hiển thị doanh thu hoa hồng và phân bố trạng thái đơn.
+
+**Quyền:** Admin only (kèm token).
+
+**Response (HTTP 200):**
+```json
+{
+  "success": true,
+  "message": "Lấy dữ liệu dashboard thành công.",
+  "data": {
+    "total_bookings": 24,
+    "pending_bookings": 5,
+    "completed_bookings": 14,
+    "total_services": 18,
+    "status_counts": {
+      "pending": 5,
+      "confirmed": 2,
+      "in_progress": 2,
+      "completed": 14,
+      "cancelled": 1,
+      "warranty_claim": 0
+    },
+    "revenue": {
+      "total_revenue": 4500000,
+      "commission_rate": 0.15,
+      "total_commission": 675000,
+      "technician_payout": 3825000
+    },
+    "recent_bookings": [
+      {
+        "id": "uuid",
+        "status": "pending",
+        "created_at": "...",
+        "customer": { "full_name": "Nguyễn Văn An", "phone": "0911000001" },
+        "services": { "name": "Sửa máy lạnh không lạnh" }
+      }
+    ]
+  }
+}
+```
+*Chi tiết các chỉ số doanh thu:*
+- `total_revenue`: Tổng giá trị các đơn sửa chữa đã hoàn thành (`status = 'completed'`).
+- `commission_rate`: Tỷ lệ chiết khấu hoa hồng của HomeFix (15% = `0.15`).
+- `total_commission`: Doanh thu thực nhận của sàn HomeFix (`total_revenue * 15%`).
+- `technician_payout`: Phần tiền thực nhận của các thợ đối tác (`total_revenue - total_commission`).
+- `status_counts`: Số lượng đơn theo từng trạng thái dùng để vẽ biểu đồ tròn/cột (Donut/Bar Chart).
 
 ---
 

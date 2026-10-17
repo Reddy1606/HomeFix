@@ -5,6 +5,7 @@ const {
   getMyBookings,
   getBookingById,
   cancelBooking,
+  createReview,
 } = require('../controllers/bookingController');
 const authenticate = require('../middlewares/authMiddleware');
 const authorize = require('../middlewares/roleMiddleware');
@@ -13,6 +14,7 @@ const {
   createBookingValidation,
   bookingIdValidation,
   listMyBookingsValidation,
+  createReviewValidation,
 } = require('../validators/bookingValidator');
 
 // Tất cả routes dưới đây yêu cầu đăng nhập (JWT)
@@ -30,5 +32,8 @@ router.get('/:id', authorize('customer', 'admin'), bookingIdValidation, validate
 
 // PUT /api/bookings/:id/cancel - Khách tự hủy đơn (khi pending / confirmed)
 router.put('/:id/cancel', authorize('customer'), bookingIdValidation, validate, cancelBooking);
+
+// POST /api/bookings/:id/review - Khách hàng đánh giá & nhận xét thợ (khi đơn completed)
+router.post('/:id/review', authorize('customer'), createReviewValidation, validate, createReview);
 
 module.exports = router;
