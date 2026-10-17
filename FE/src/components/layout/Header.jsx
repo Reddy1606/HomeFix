@@ -7,6 +7,7 @@ const NAV_LINKS = [
   { to: '/services', label: 'Dịch vụ' },
   { to: '/booking', label: 'Đặt lịch' },
   { to: '/my-bookings', label: 'Lịch sử đặt lịch' },
+  { to: '/register?role=technician', label: 'Đăng ký làm thợ' },
   { to: '/#contact', label: 'Liên hệ' },
 ];
 

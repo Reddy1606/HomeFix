@@ -152,7 +152,7 @@ const toggleUserStatus = async (req, res, next) => {
 const updateUserRole = async (req, res, next) => {
   try {
     const { role } = req.body;
-    const allowedRoles = ['customer', 'technician', 'staff', 'admin'];
+    const allowedRoles = ['customer', 'technician', 'admin'];
 
     if (!role || !allowedRoles.includes(role)) {
       return res.status(400).json({

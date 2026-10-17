@@ -15,3 +15,7 @@ export async function updateProfile(payload) {
 export async function changePassword(payload) {
   return (await apiClient.post('/auth/change-password', payload)).data;
 }
+export async function becomeTechnician(payload = {}) {
+  return (await apiClient.post('/auth/become-technician', payload)).data.data;
+}
+

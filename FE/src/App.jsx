@@ -38,6 +38,10 @@ export default function App() {
               path="/register"
               element={<AuthPage key="register" mode="register" />}
             />
+            <Route
+              path="/register-technician"
+              element={<AuthPage key="register-tech" mode="register-technician" />}
+            />
             <Route element={<ProtectedRoute />}>
               <Route path="/profile" element={<Profile />} />
               <Route path="/my-bookings" element={<BookingHistory />} />

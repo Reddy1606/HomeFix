@@ -6,6 +6,7 @@ const {
   getMe,
   updateMe,
   changePassword,
+  becomeTechnician,
 } = require('../controllers/authController');
 const authenticate = require('../middlewares/authMiddleware');
 const {
@@ -17,7 +18,7 @@ const {
 
 // ==================== PUBLIC ROUTES ====================
 
-// POST /api/auth/register - Đăng ký tài khoản
+// POST /api/auth/register - Đăng ký tài khoản (hỗ trợ role customer hoặc technician)
 router.post('/register', registerValidation, register);
 
 // POST /api/auth/login - Đăng nhập
@@ -33,5 +34,8 @@ router.put('/me', authenticate, updateProfileValidation, updateMe);
 
 // POST /api/auth/change-password - Đổi mật khẩu
 router.post('/change-password', authenticate, changePasswordValidation, changePassword);
+
+// POST /api/auth/become-technician - Đăng ký nâng cấp tài khoản thành Thợ sửa chữa
+router.post('/become-technician', authenticate, becomeTechnician);
 
 module.exports = router;

@@ -24,12 +24,12 @@ export default function ProtectedRoute({ adminOnly = false }) {
       </section>
     );
   if (!user) return <Navigate to="/login" state={{ from: location }} replace />;
-  if (adminOnly && user.role !== 'admin' && user.role !== 'staff')
+  if (adminOnly && user.role !== 'admin')
     return (
       <section className="account-state">
         <span className="hf-eyebrow">403 · Quyền truy cập</span>
         <h1>Bạn không có quyền truy cập</h1>
-        <p>Trang này chỉ dành cho quản trị viên và nhân viên HomeFix.</p>
+        <p>Trang này chỉ dành cho quản trị viên HomeFix.</p>
         <Link className="hf-button" to="/">
           Về trang chủ
         </Link>

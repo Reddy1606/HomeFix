@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/auth';
-import { changePassword, updateProfile } from '../../api/auth';
+import { becomeTechnician, changePassword, updateProfile } from '../../api/auth';
 import { uploadAvatar, uploadKYC } from '../../api/upload';
 import FormField from '../../components/auth/FormField';
 import {
@@ -44,6 +44,26 @@ export default function Profile() {
   const [notice, setNotice] = useState(null);
   const [busy, setBusy] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
+
+  // Đăng ký nâng cấp làm thợ sửa chữa
+  const handleBecomeTechnician = async () => {
+    if (!window.confirm('Bạn có chắc chắn muốn đăng ký nâng cấp tài khoản thành Đối tác Thợ HomeFix?')) return;
+    setBusy(true);
+    setNotice(null);
+    try {
+      const res = await becomeTechnician();
+      setUser(res.user);
+      setNotice({
+        type: 'success',
+        text: 'Chúc mừng bạn đã đăng ký làm thợ thành công! Hãy tải lên hồ sơ CCCD để được Admin phê duyệt nhận việc.',
+      });
+      setTab('kyc');
+    } catch (err) {
+      setNotice({ type: 'error', text: apiError(err) });
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const change = (event) => {
     const { name, value } = event.target;
@@ -305,6 +325,17 @@ export default function Profile() {
                 </button>
               )}
 
+              {user.role === 'customer' && (
+                <button
+                  type="button"
+                  disabled={busy}
+                  style={{ color: '#d97706', fontWeight: 600, textAlign: 'left' }}
+                  onClick={handleBecomeTechnician}
+                >
+                  🔧 Đăng ký làm thợ
+                </button>
+              )}
+
               {user.role === 'admin' && (
                 <Link to="/admin">Trang quản trị →</Link>
               )}
@@ -329,6 +360,28 @@ export default function Profile() {
                 ? 'Sử dụng mật khẩu mạnh để bảo vệ tài khoản.'
                 : 'Tải lên CCCD và chứng chỉ nghề để được cấp quyền nhận đơn sửa chữa.'}
             </p>
+
+            {user.role === 'customer' && tab === 'profile' && (
+              <div style={{ margin: '16px 0 24px', padding: '16px 18px', borderRadius: '12px', background: '#fffbeb', border: '1px solid #fde68a', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '0.95rem', color: '#92400e', fontWeight: 700 }}>
+                    🔧 Bạn có tay nghề và muốn nhận việc sửa chữa?
+                  </h3>
+                  <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: '#b45309' }}>
+                    Đăng ký nâng cấp tài khoản của bạn thành Đối tác Thợ HomeFix để nhận đơn việc ngay hôm nay.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="hf-button small"
+                  style={{ background: '#d97706', borderColor: 'transparent', whiteSpace: 'nowrap', fontWeight: 700 }}
+                  disabled={busy}
+                  onClick={handleBecomeTechnician}
+                >
+                  Đăng ký làm thợ ngay →
+                </button>
+              </div>
+            )}
 
             {notice && (
               <div

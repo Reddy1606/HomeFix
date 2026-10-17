@@ -12,10 +12,14 @@ import {
 } from '../../utils/validation';
 
 export default function AuthPage({ mode = 'login' }) {
-  const registering = mode === 'register';
-  const { user, loading, login, register } = useAuth();
   const location = useLocation();
+  const queryRole = new URLSearchParams(location.search).get('role');
+  const registering = mode === 'register' || mode === 'register-technician';
+  const { user, loading, login, register } = useAuth();
   const navigate = useNavigate();
+  const [selectedRole, setSelectedRole] = useState(
+    mode === 'register-technician' || queryRole === 'technician' ? 'technician' : 'customer'
+  );
   const [values, setValues] = useState({
     email: '',
     password: '',
@@ -66,7 +70,7 @@ export default function AuthPage({ mode = 'login' }) {
         Object.assign(payload, {
           full_name: values.full_name.trim(),
           phone: values.phone.trim(),
-          role: 'customer',
+          role: selectedRole,
         });
       const account = await (registering ? register(payload) : login(payload));
       navigate(destination(account), { replace: true });
@@ -156,13 +160,75 @@ export default function AuthPage({ mode = 'login' }) {
           </Link>
           <span className="hf-eyebrow">TÀI KHOẢN HOMEFIX</span>
           <h2 id="auth-title">
-            {registering ? 'Tạo tài khoản mới' : 'Chào mừng bạn trở lại'}
+            {!registering
+              ? 'Chào mừng bạn trở lại'
+              : selectedRole === 'technician'
+                ? 'Đăng ký làm thợ HomeFix'
+                : 'Tạo tài khoản mới'}
           </h2>
           <p className="hf-muted">
-            {registering
-              ? 'Sẵn sàng cho một ngôi nhà được chăm sóc tốt hơn.'
-              : 'Đăng nhập để quản lý lịch hẹn và thông tin cá nhân.'}
+            {!registering
+              ? 'Đăng nhập để quản lý lịch hẹn và thông tin cá nhân.'
+              : selectedRole === 'technician'
+                ? 'Gia nhập đội ngũ thợ lành nghề, kết nối khách hàng và tăng thu nhập ổn định.'
+                : 'Sẵn sàng cho một ngôi nhà được chăm sóc tốt hơn.'}
           </p>
+          {registering && (
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#475569', marginBottom: '8px' }}>
+                Bạn đăng ký với tư cách:
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <button
+                  type="button"
+                  style={{
+                    padding: '10px 12px',
+                    borderRadius: '10px',
+                    border: `2px solid ${selectedRole === 'customer' ? '#2563eb' : '#e2e8f0'}`,
+                    background: selectedRole === 'customer' ? '#eff6ff' : '#ffffff',
+                    color: selectedRole === 'customer' ? '#1d4ed8' : '#64748b',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    transition: 'all 0.15s ease',
+                  }}
+                  onClick={() => setSelectedRole('customer')}
+                >
+                  🛍️ Khách hàng
+                  <span style={{ display: 'block', fontSize: '0.72rem', fontWeight: 400, marginTop: '2px', color: '#64748b' }}>
+                    Đặt lịch sửa nhà
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  style={{
+                    padding: '10px 12px',
+                    borderRadius: '10px',
+                    border: `2px solid ${selectedRole === 'technician' ? '#d97706' : '#e2e8f0'}`,
+                    background: selectedRole === 'technician' ? '#fffbeb' : '#ffffff',
+                    color: selectedRole === 'technician' ? '#b45309' : '#64748b',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    transition: 'all 0.15s ease',
+                  }}
+                  onClick={() => setSelectedRole('technician')}
+                >
+                  🔧 Thợ sửa chữa
+                  <span style={{ display: 'block', fontSize: '0.72rem', fontWeight: 400, marginTop: '2px', color: '#64748b' }}>
+                    Nhận việc sửa chữa
+                  </span>
+                </button>
+              </div>
+
+              {selectedRole === 'technician' && (
+                <div style={{ marginTop: '12px', padding: '10px 12px', borderRadius: '8px', background: '#fffbeb', border: '1px solid #fde68a', fontSize: '0.8rem', color: '#92400e' }}>
+                  ℹ️ <strong>Quy trình đối tác thợ:</strong> Sau khi tạo tài khoản, bạn sẽ bổ sung ảnh CCCD và chứng chỉ tại trang cá nhân để Admin kích hoạt quyền nhận việc.
+                </div>
+              )}
+            </div>
+          )}
           {message && (
             <div className="hf-notice error" role="alert">
               {message}
@@ -236,7 +302,7 @@ export default function AuthPage({ mode = 'login' }) {
                 {busy
                   ? 'Đang xử lý…'
                   : registering
-                    ? 'Tạo tài khoản'
+                    ? (selectedRole === 'technician' ? 'Đăng ký làm thợ ngay' : 'Tạo tài khoản')
                     : 'Đăng nhập'}
                 <span aria-hidden="true"> →</span>
               </button>

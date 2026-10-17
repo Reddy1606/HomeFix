@@ -256,10 +256,55 @@ const changePassword = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Đăng ký nâng cấp tài khoản thành Thợ sửa chữa
+ * @route   POST /api/auth/become-technician
+ * @access  Private
+ */
+const becomeTechnician = async (req, res, next) => {
+  try {
+    if (req.user.role === 'technician') {
+      return res.status(400).json({
+        success: false,
+        message: 'Tài khoản của bạn đã là Thợ sửa chữa.',
+      });
+    }
+
+    if (req.user.role === 'admin') {
+      return res.status(400).json({
+        success: false,
+        message: 'Tài khoản Quản trị viên không thể chuyển đổi thành thợ.',
+      });
+    }
+
+    const { phone, address } = req.body;
+    const patch = { role: 'technician' };
+    if (phone) patch.phone = phone;
+    if (address) patch.address = address;
+
+    const user = await User.update(req.user.id, patch);
+
+    const token = generateToken({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Chúc mừng bạn đã đăng ký làm thợ thành công! Hãy bổ sung CCCD tại mục KYC để Admin phê duyệt nhận việc.',
+      data: { user, token },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   register,
   login,
   getMe,
   updateMe,
   changePassword,
+  becomeTechnician,
 };

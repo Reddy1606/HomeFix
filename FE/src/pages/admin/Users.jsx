@@ -17,14 +17,12 @@ import { dateLabel } from '../../utils/admin';
 const ROLE_LABELS = {
   customer: { label: 'Khách hàng', color: '#0284c7', bg: '#f0f9ff' },
   technician: { label: 'Thợ sửa chữa', color: '#d97706', bg: '#fffbeb' },
-  staff: { label: 'Nhân viên (Staff)', color: '#0d9488', bg: '#f0fdfa' },
   admin: { label: 'Quản trị viên', color: '#7c3aed', bg: '#f5f3ff' },
 };
 
 const ROLE_DESCRIPTIONS = {
   customer: 'Khách hàng sử dụng dịch vụ, đặt lịch và thanh toán.',
-  technician: 'Thợ sửa chữa tiếp nhận đơn, thực hiện công việc và hoàn tất KYC.',
-  staff: 'Nhân viên vận hành, quản lý điều phối đơn hàng và chăm sóc khách hàng.',
+  technician: 'Thợ sửa chữa tiếp nhận đơn, thực hiện công việc và hoàn tất hồ sơ KYC.',
   admin: 'Quản trị viên cấp cao, toàn quyền quản trị tài khoản và cấu hình hệ thống.',
 };
 
@@ -144,7 +142,6 @@ export default function Users() {
   // Tính số liệu nhanh trên trang hiện tại
   const countCustomer = users.filter((u) => u.role === 'customer').length;
   const countTech = users.filter((u) => u.role === 'technician').length;
-  const countStaff = users.filter((u) => u.role === 'staff').length;
   const countVerified = users.filter((u) => u.role === 'technician' && u.is_verified).length;
 
   return (
@@ -153,7 +150,7 @@ export default function Users() {
         <div>
           <span className="hf-eyebrow">QUẢN TRỊ TÀI KHOẢN</span>
           <h1>Quản lý người dùng</h1>
-          <p>Danh sách khách hàng, thợ sửa chữa, nhân viên (Staff), xác minh hồ sơ KYC và phân quyền hệ thống.</p>
+          <p>Danh sách khách hàng, thợ sửa chữa, xác minh hồ sơ KYC và phân quyền hệ thống.</p>
         </div>
         <button
           className="hf-button secondary"
@@ -203,10 +200,10 @@ export default function Users() {
 
         <article className="hf-card stat-card">
           <div>
-            <p>Nhân viên Staff (trang này)</p>
-            <strong>{countStaff}</strong>
+            <p>Thợ đã xác minh KYC</p>
+            <strong>{countVerified}</strong>
           </div>
-          <span className="stat-icon" style={{ background: '#f0fdfa', color: '#0d9488' }}>🛡️</span>
+          <span className="stat-icon" style={{ background: '#f0fdf4', color: '#16a34a' }}>✓</span>
         </article>
       </div>
 
@@ -231,7 +228,6 @@ export default function Users() {
               <option value="">Tất cả vai trò</option>
               <option value="customer">Khách hàng</option>
               <option value="technician">Thợ sửa chữa</option>
-              <option value="staff">Nhân viên (Staff)</option>
               <option value="admin">Quản trị viên</option>
             </select>
           </label>
@@ -565,14 +561,14 @@ export default function Users() {
         </Modal>
       )}
 
-      {/* Modal điều chỉnh phân quyền (Set role cho staff/admin/technician/customer) */}
+      {/* Modal điều chỉnh phân quyền (Khách hàng / Thợ sửa chữa / Quản trị viên) */}
       {roleModalUser && (
         <Modal
           title={`Phân quyền tài khoản: ${roleModalUser.full_name || roleModalUser.email}`}
           onClose={() => setRoleModalUser(null)}
         >
           <p style={{ color: '#64748b', fontSize: '0.88rem', marginBottom: '16px' }}>
-            Chọn vai trò mới cho tài khoản. Nhân viên (Staff) có quyền truy cập vào bảng quản trị để xem và điều phối đơn hàng.
+            Chọn vai trò mới cho tài khoản (Khách hàng, Thợ sửa chữa hoặc Quản trị viên).
           </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>

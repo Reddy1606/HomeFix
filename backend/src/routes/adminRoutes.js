@@ -29,9 +29,9 @@ const {
   updateBookingStatusValidation,
 } = require('../validators/bookingValidator');
 
-// Tất cả routes dưới đây yêu cầu: đăng nhập + role admin hoặc staff
+// Tất cả routes dưới đây yêu cầu: đăng nhập + role admin
 router.use(authenticate);
-router.use(authorize('admin', 'staff'));
+router.use(authorize('admin'));
 
 // GET /api/admin/dashboard - Thống kê tổng quan nền tảng
 router.get('/dashboard', getDashboardStats);
