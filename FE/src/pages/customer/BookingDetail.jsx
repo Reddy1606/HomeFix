@@ -1,5 +1,8 @@
+import { useToast } from '../../context/ToastContext';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import BookingReview from '../../components/common/BookingReview';
+import { submitBookingReview } from '../../api/reviews';
 import { fetchBookingById, cancelBooking } from '../../api/bookings';
 import { formatPrice } from '../../api/services';
 
@@ -33,6 +36,7 @@ function formatDate(isoStr) {
 }
 
 export default function BookingDetail() {
+  const { showToast } = useToast();
   const { id } = useParams();
   const navigate = useNavigate();
   const [booking, setBooking] = useState(null);
@@ -87,6 +91,28 @@ export default function BookingDetail() {
       setCanceling(false);
     }
   };
+
+
+const handleSubmitReview = async ({ bookingId, rating, comment }) => {
+  try {
+    const result = await submitBookingReview(bookingId, {
+      rating,
+      comment
+    });
+
+    showToast('Đánh giá thợ sửa chữa thành công!', 'success');
+
+    return result;
+  } catch (error) {
+    showToast(
+      error.message || 'Không thể gửi đánh giá. Vui lòng thử lại.',
+      'error'
+    );
+
+    throw error;
+  }
+};
+
 
   if (loading) {
     return (
@@ -290,6 +316,18 @@ export default function BookingDetail() {
             </div>
           </div>
         </div>
+        
+{/* Đánh giá thợ sau khi hoàn thành đơn */}
+{booking.status === 'completed' && (
+  <div className="mt-8 border-t border-gray-100 pt-6">
+    <BookingReview
+      bookingId={booking.id}
+      status={booking.status}
+      onSubmitReview={handleSubmitReview}
+    />
+  </div>
+)}
+
 
         {/* Các nút thao tác */}
         <div className="mt-8 pt-6 border-t border-gray-100 flex flex-wrap items-center justify-between gap-4">
