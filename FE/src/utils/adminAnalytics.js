@@ -11,23 +11,25 @@ export async function collectPages(fetchPage, key, options = {}) {
     options.signal?.throwIfAborted();
     const data = await fetchPage({ page, limit: 100 }, options);
     const pagination = data?.pagination;
+    const totalPages = pagination?.totalPages ?? pagination?.total_pages;
+    const total = pagination?.total;
     if (!Array.isArray(data?.[key]) || !pagination ||
-        !Number.isSafeInteger(pagination.total) || pagination.total < 0 ||
-        !Number.isSafeInteger(pagination.totalPages) || pagination.totalPages < 0 ||
-        (pagination.total > 0 && pagination.totalPages < page)) {
+        !Number.isSafeInteger(total) || total < 0 ||
+        !Number.isSafeInteger(totalPages) || totalPages < 0 ||
+        (total > 0 && totalPages < page)) {
       throw new AdminDataError('Dữ liệu phân trang chưa đầy đủ. Vui lòng tải lại.');
     }
-    if (expectedTotal !== undefined && expectedTotal !== pagination.total) {
+    if (expectedTotal !== undefined && expectedTotal !== total) {
       throw new AdminDataError('Danh sách vừa thay đổi. Vui lòng tải lại để cập nhật số liệu.');
     }
-    expectedTotal = pagination.total;
+    expectedTotal = total;
     for (const row of data[key]) {
       if (!row.id || rows.has(row.id)) {
         throw new AdminDataError('Danh sách vừa thay đổi. Vui lòng tải lại để cập nhật số liệu.');
       }
       rows.set(row.id, row);
     }
-    if (page >= pagination.totalPages) break;
+    if (page >= totalPages) break;
     if (!data[key].length) throw new AdminDataError('Thiếu dữ liệu phân trang. Vui lòng tải lại.');
     page += 1;
   }

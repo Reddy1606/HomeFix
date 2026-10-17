@@ -35,11 +35,12 @@ export function ResourceState({ loading, error, empty, reload }) {
   return null;
 }
 export function Pagination({ pagination, page, onChange }) {
-  if (!pagination || pagination.totalPages <= 1) return null;
+  const totalPages = pagination?.totalPages ?? pagination?.total_pages ?? 1;
+  if (!pagination || totalPages <= 1) return null;
   return (
     <nav className="hf-pagination" aria-label="Phân trang">
       <span>
-        Trang {page} / {pagination.totalPages} · {pagination.total} kết quả
+        Trang {page} / {totalPages} · {pagination.total} kết quả
       </span>
       <div>
         <button
@@ -51,7 +52,7 @@ export function Pagination({ pagination, page, onChange }) {
         </button>
         <button
           className="hf-button secondary small"
-          disabled={page >= pagination.totalPages}
+          disabled={page >= totalPages}
           onClick={() => onChange(page + 1)}
         >
           Sau →

@@ -14,11 +14,12 @@ export default function DashboardCharts({ data }) {
   const series = Array.from({ length: range }, (_, index) => {
     const date = new Date(Date.UTC(year, month - range + index, 1));
     const key = date.toISOString().slice(0, 7);
-    return data.revenueSeries.find((row) => row.month === key) || { month: key, revenue: 0, commission: 0 };
+    const revenueSeries = Array.isArray(data?.revenueSeries) ? data.revenueSeries : [];
+    return revenueSeries.find((row) => row.month === key) || { month: key, revenue: 0, commission: 0 };
   });
   const max = Math.max(...series.map((row) => row.revenue), 1);
   const total = series.reduce((sum, row) => sum + row.revenue, 0);
-  const entries = Object.entries(data.statusCounts);
+  const entries = Object.entries(data?.statusCounts || {});
   let offset = 0;
   const segments = entries.map(([, count], index) => {
     const start = offset;

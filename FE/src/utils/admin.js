@@ -18,11 +18,13 @@ export function dateLabel(value) {
       }).format(date);
 }
 export function money(value) {
-  return value == null
+  if (value == null) return 'Chưa có';
+  const num = typeof value === 'object' ? Number(value?.total_revenue ?? 0) : Number(value);
+  return Number.isNaN(num)
     ? 'Chưa có'
     : new Intl.NumberFormat('vi-VN', {
         style: 'currency',
         currency: 'VND',
         maximumFractionDigits: 0,
-      }).format(value);
+      }).format(num);
 }

@@ -19,11 +19,16 @@ const parsePagination = (query = {}, defaultLimit = DEFAULT_LIMIT) => {
 /**
  * Tạo object pagination trả về cho Frontend (snake_case theo API Contract)
  */
-const buildPagination = ({ page, limit, total }) => ({
-  page,
-  limit,
-  total: total || 0,
-  total_pages: Math.ceil((total || 0) / limit),
-});
+const buildPagination = ({ page, limit, total }) => {
+  const safeTotal = total || 0;
+  const totalPages = Math.ceil(safeTotal / limit);
+  return {
+    page,
+    limit,
+    total: safeTotal,
+    total_pages: totalPages,
+    totalPages,
+  };
+};
 
 module.exports = { parsePagination, buildPagination, DEFAULT_LIMIT, MAX_LIMIT };
