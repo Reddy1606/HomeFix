@@ -441,15 +441,15 @@ export default function Users() {
                             {u.role === 'technician' && (
                               <button
                                 type="button"
-                                disabled={busy}
                                 className="hf-button small"
                                 style={{
                                   background: u.is_verified ? '#f59e0b' : '#16a34a',
                                   borderColor: 'transparent',
+                                  fontWeight: 650,
                                 }}
-                                onClick={() => handleVerify(u, !u.is_verified)}
+                                onClick={() => setSelectedUser(u)}
                               >
-                                {u.is_verified ? 'Hủy duyệt' : 'Duyệt KYC'}
+                                {u.is_verified ? '🔍 Hồ sơ KYC' : '🔍 Kiểm tra & Duyệt KYC'}
                               </button>
                             )}
 
@@ -534,55 +534,72 @@ export default function Users() {
             </div>
 
             {selectedUser.role === 'technician' && (
-              <>
-                <span style={{ color: '#64748b' }}>Xác minh KYC:</span>
-                <strong>
+              <div style={{ gridColumn: 'span 2', marginTop: '8px', padding: '16px', borderRadius: '12px', background: '#f8fafc', border: '1.5px solid #e2e8f0' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
+                  <h4 style={{ fontSize: '0.92rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                    📋 HỒ SƠ XÁC MINH DANH TÍNH (KYC)
+                  </h4>
                   {selectedUser.is_verified ? (
-                    <span style={{ color: '#16a34a' }}>✅ Đã xác minh đủ điều kiện nhận đơn</span>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '3px 8px', borderRadius: '6px', background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0' }}>
+                      ✓ ĐÃ PHÊ DUYỆT
+                    </span>
                   ) : selectedUser.cccd_image || selectedUser.cccd_number || selectedUser.criminal_record_url ? (
-                    <span style={{ color: '#d97706' }}>⏳ Đang chờ Admin duyệt hồ sơ</span>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '3px 8px', borderRadius: '6px', background: '#fffbeb', color: '#d97706', border: '1px solid #fde68a' }}>
+                      ⏳ CHỜ ADMIN DUYỆT
+                    </span>
                   ) : (
-                    <span style={{ color: '#64748b' }}>⚠️ Thợ chưa gửi hồ sơ KYC</span>
-                  )}
-                </strong>
-
-                <span style={{ color: '#64748b' }}>Số CCCD:</span>
-                <span style={{ fontWeight: 600 }}>{selectedUser.cccd_number || 'Chưa cung cấp'}</span>
-
-                <span style={{ color: '#64748b' }}>Ảnh thẻ CCCD:</span>
-                <div>
-                  {selectedUser.cccd_image ? (
-                    <a href={selectedUser.cccd_image} target="_blank" rel="noreferrer" title="Click để mở ảnh kích thước lớn">
-                      <img
-                        src={selectedUser.cccd_image}
-                        alt="Ảnh CCCD"
-                        style={{ maxHeight: '100px', borderRadius: '6px', border: '1px solid #cbd5e1', cursor: 'pointer' }}
-                      />
-                    </a>
-                  ) : (
-                    <span style={{ color: '#94a3b8', fontStyle: 'italic' }}>Chưa tải lên ảnh</span>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 600, padding: '3px 8px', borderRadius: '6px', background: '#f1f5f9', color: '#64748b', border: '1px solid #cbd5e1' }}>
+                      CHƯA NỘP HỒ SƠ
+                    </span>
                   )}
                 </div>
 
-                <span style={{ color: '#64748b' }}>Chứng chỉ nghề:</span>
-                <div>
-                  {selectedUser.criminal_record_url ? (
-                    <a
-                      href={selectedUser.criminal_record_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{ color: '#2563eb', fontWeight: 700, textDecoration: 'underline' }}
-                    >
-                      📄 Mở xem chứng chỉ đã nộp ↗
-                    </a>
-                  ) : (
-                    <span style={{ color: '#94a3b8', fontStyle: 'italic' }}>Chưa nộp chứng chỉ</span>
-                  )}
-                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '10px 14px', fontSize: '0.85rem' }}>
+                  <span style={{ color: '#64748b' }}>Số CCCD:</span>
+                  <strong style={{ fontSize: '0.95rem', color: '#0f172a' }}>
+                    {selectedUser.cccd_number ? `🪪 ${selectedUser.cccd_number}` : '⚠️ Chưa cung cấp số CCCD'}
+                  </strong>
 
-                <span style={{ color: '#64748b' }}>Đánh giá thợ:</span>
-                <span>⭐ {selectedUser.rating_avg ? `${selectedUser.rating_avg} / 5` : 'Chưa có lượt đánh giá nào'}</span>
-              </>
+                  <span style={{ color: '#64748b' }}>Ảnh thẻ CCCD:</span>
+                  <div>
+                    {selectedUser.cccd_image ? (
+                      <div>
+                        <a href={selectedUser.cccd_image} target="_blank" rel="noreferrer" title="Click để mở ảnh kích thước lớn trong tab mới">
+                          <img
+                            src={selectedUser.cccd_image}
+                            alt="Ảnh CCCD"
+                            style={{ maxHeight: '130px', maxWidth: '100%', borderRadius: '8px', border: '1px solid #cbd5e1', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', cursor: 'zoom-in' }}
+                          />
+                        </a>
+                        <small style={{ display: 'block', color: '#2563eb', marginTop: '4px', fontWeight: 600 }}>
+                          🔍 Nhấp vào ảnh để xem kích thước lớn ↗
+                        </small>
+                      </div>
+                    ) : (
+                      <span style={{ color: '#94a3b8', fontStyle: 'italic' }}>Chưa tải lên ảnh</span>
+                    )}
+                  </div>
+
+                  <span style={{ color: '#64748b' }}>Chứng chỉ nghề:</span>
+                  <div>
+                    {selectedUser.criminal_record_url ? (
+                      <a
+                        href={selectedUser.criminal_record_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#2563eb', fontWeight: 700, padding: '6px 12px', background: '#eff6ff', borderRadius: '6px', border: '1px solid #bfdbfe', textDecoration: 'none' }}
+                      >
+                        📄 Mở xem chứng chỉ đã nộp ↗
+                      </a>
+                    ) : (
+                      <span style={{ color: '#94a3b8', fontStyle: 'italic' }}>Chưa nộp chứng chỉ</span>
+                    )}
+                  </div>
+
+                  <span style={{ color: '#64748b' }}>Đánh giá thợ:</span>
+                  <span>⭐ {selectedUser.rating_avg ? `${selectedUser.rating_avg} / 5` : 'Chưa có lượt đánh giá nào'}</span>
+                </div>
+              </div>
             )}
 
             <span style={{ color: '#64748b' }}>Trạng thái:</span>
