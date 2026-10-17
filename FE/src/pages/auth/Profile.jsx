@@ -148,8 +148,8 @@ export default function Profile() {
       setNotice({ type: 'error', text: 'Số CCCD phải gồm từ 9 đến 12 chữ số hợp lệ.' });
       return;
     }
-    if (!cccdFile && !user?.cccd_image) {
-      setNotice({ type: 'error', text: 'Vui lòng chọn ảnh chụp thẻ CCCD để tải lên.' });
+    if (!cccdFile && !cleanNumber) {
+      setNotice({ type: 'error', text: 'Vui lòng nhập số CCCD hoặc chọn tệp ảnh chụp thẻ CCCD để lưu.' });
       return;
     }
     setBusy(true);
@@ -163,20 +163,20 @@ export default function Profile() {
         setUser((prev) => ({
           ...prev,
           cccd_image: res.document_url,
-          cccd_number: cleanNumber,
+          cccd_number: cleanNumber || prev.cccd_number,
         }));
         setNotice({
           type: 'success',
-          text: 'Đã tải lên ảnh CCCD thành công! Hồ sơ đã được chuyển đến Admin để phê duyệt.',
+          text: 'Đã tải lên hồ sơ CCCD thành công! Hồ sơ đã được gửi đến Admin để xét duyệt.',
         });
         setCccdFile(null);
         setCccdPreview(null);
-      } else if (cleanNumber !== user?.cccd_number) {
+      } else if (cleanNumber) {
         const updated = await updateProfile({ cccd_number: cleanNumber });
         setUser((prev) => ({ ...prev, ...updated, cccd_number: cleanNumber }));
         setNotice({
           type: 'success',
-          text: 'Đã cập nhật số CCCD thành công!',
+          text: 'Đã lưu số CCCD thành công! Hãy tải thêm ảnh chụp thẻ CCCD để hoàn tất hồ sơ.',
         });
       }
     } catch (err) {
@@ -190,7 +190,7 @@ export default function Profile() {
   const handleUploadCert = async (e) => {
     e.preventDefault();
     if (!certFile) {
-      setNotice({ type: 'error', text: 'Vui lòng chọn tệp chứng chỉ / lý lịch tư pháp.' });
+      setNotice({ type: 'error', text: 'Vui lòng bấm "Chọn tệp" để chọn file chứng chỉ (PDF hoặc ảnh) từ máy trước khi bấm tải lên.' });
       return;
     }
     if (certFile.size > 10 * 1024 * 1024) {
@@ -589,7 +589,7 @@ export default function Profile() {
                   <button
                     className="hf-button small"
                     type="submit"
-                    disabled={busy || (!cccdFile && !user?.cccd_image && !kycNumber)}
+                    disabled={busy}
                   >
                     {busy ? 'Đang lưu...' : '💾 Lưu & Gửi CCCD'}
                   </button>
@@ -654,7 +654,7 @@ export default function Profile() {
                   <button
                     className="hf-button secondary small"
                     type="submit"
-                    disabled={busy || !certFile}
+                    disabled={busy}
                   >
                     {busy ? 'Đang tải lên...' : '📤 Tải lên chứng chỉ'}
                   </button>

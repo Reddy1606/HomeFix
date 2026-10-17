@@ -9,9 +9,7 @@ export async function uploadAvatar(file) {
   const formData = new FormData();
   formData.append('file', file);
 
-  const { data } = await apiClient.post('/upload/avatar', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  const { data } = await apiClient.post('/upload/avatar', formData);
   return data.data;
 }
 
@@ -29,9 +27,7 @@ export async function uploadKYC(file, { type = 'cccd', cccd_number = '' } = {}) 
     formData.append('cccd_number', cccd_number);
   }
 
-  const { data } = await apiClient.post('/upload/kyc', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  const { data } = await apiClient.post('/upload/kyc', formData);
   return data.data;
 }
 
@@ -44,8 +40,6 @@ export async function uploadServiceImage(file) {
   const formData = new FormData();
   formData.append('file', file);
 
-  const { data } = await apiClient.post('/upload/service-image', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  const { data } = await apiClient.post('/upload/service-image', formData);
   return data.data;
 }

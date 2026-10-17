@@ -4,8 +4,8 @@ const multer = require('multer');
 // Dễ dàng tải trực tiếp lên Supabase Storage hoặc lưu vào ổ đĩa khi cần
 const storage = multer.memoryStorage();
 
-// Giới hạn dung lượng: 5MB
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
+// Giới hạn dung lượng: 10MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 // Danh sách mimetype hợp lệ
 const ALLOWED_MIME_TYPES = [
