@@ -1,6 +1,8 @@
 const { validationResult } = require('express-validator');
 const User = require('../models/User');
 const { hashPassword, comparePassword, generateToken } = require('../utils/helpers');
+const emailService = require('../services/emailService');
+const otpService = require('../services/otpService');
 
 /**
  * @desc    Đăng ký tài khoản mới
@@ -300,6 +302,156 @@ const becomeTechnician = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Gửi mã OTP đặt lại mật khẩu về Email
+ * @route   POST /api/auth/forgot-password
+ * @access  Public
+ */
+const forgotPassword = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email không hợp lệ.',
+        errors: errors.array().map((e) => ({ field: e.path, message: e.msg })),
+      });
+    }
+
+    const { email } = req.body;
+    const user = await User.findByEmail(email);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Email này chưa được đăng ký trong hệ thống HomeFix.',
+      });
+    }
+
+    if (!user.is_active) {
+      return res.status(403).json({
+        success: false,
+        message: 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin HomeFix.',
+      });
+    }
+
+    // Tạo mã OTP
+    const otpResult = otpService.generateOtp(user.email, 10);
+    if (otpResult.error === 'RATE_LIMITED') {
+      return res.status(429).json({
+        success: false,
+        message: otpResult.message,
+        retryAfter: otpResult.retryAfter,
+      });
+    }
+
+    // Gửi email chứa OTP
+    await emailService.sendOtpEmail({
+      to: user.email,
+      fullName: user.full_name,
+      otp: otpResult.otp,
+      expiresInMinutes: otpResult.expiresInMinutes,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Mã xác thực OTP đã được gửi về email của bạn. Vui lòng kiểm tra hộp thư đến (hoặc hòm thư rác).',
+      data: {
+        email: user.email,
+        expiresInMinutes: otpResult.expiresInMinutes,
+        // Khi không chạy production, đính kèm OTP để hỗ trợ test nhanh nếu cần
+        devOtp: process.env.NODE_ENV !== 'production' ? otpResult.otp : undefined,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Kiểm tra mã OTP hợp lệ
+ * @route   POST /api/auth/verify-otp
+ * @access  Public
+ */
+const verifyOtp = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Dữ liệu không hợp lệ.',
+        errors: errors.array().map((e) => ({ field: e.path, message: e.msg })),
+      });
+    }
+
+    const { email, otp } = req.body;
+    const verification = otpService.verifyOtp(email, otp, false);
+
+    if (!verification.valid) {
+      return res.status(400).json({
+        success: false,
+        message: verification.message,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Mã xác thực OTP hợp lệ. Bạn có thể tiến hành đặt lại mật khẩu mới.',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Đặt lại mật khẩu mới với mã OTP
+ * @route   POST /api/auth/reset-password
+ * @access  Public
+ */
+const resetPassword = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Dữ liệu không hợp lệ.',
+        errors: errors.array().map((e) => ({ field: e.path, message: e.msg })),
+      });
+    }
+
+    const { email, otp, new_password } = req.body;
+
+    // Kiểm tra user
+    const user = await User.findByEmail(email);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy tài khoản người dùng.',
+      });
+    }
+
+    // Kiểm tra OTP và hủy sau khi xác thực (consume = true)
+    const verification = otpService.verifyOtp(email, otp, true);
+    if (!verification.valid) {
+      return res.status(400).json({
+        success: false,
+        message: verification.message,
+      });
+    }
+
+    // Hash mật khẩu mới và cập nhật
+    const password_hash = await hashPassword(new_password);
+    await User.updatePassword(user.id, password_hash);
+
+    res.status(200).json({
+      success: true,
+      message: 'Đặt lại mật khẩu thành công! Bạn có thể đăng nhập ngay với mật khẩu mới.',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -307,4 +459,8 @@ module.exports = {
   updateMe,
   changePassword,
   becomeTechnician,
+  forgotPassword,
+  verifyOtp,
+  resetPassword,
 };
+

@@ -6,11 +6,14 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
-    "test": "node src/test/testAuth.js && node src/test/testBackend2.js && node src/test/testUpload.js",
+    "test": "node src/test/testAuth.js && node src/test/testBackend2.js && node src/test/testUpload.js && node src/test/testForgotPassword.js",
     "test:auth": "node src/test/testAuth.js",
     "test:be2": "node src/test/testBackend2.js",
     "test:upload": "node src/test/testUpload.js",
-    "seed": "node src/database/seed.js"
+    "test:otp": "node src/test/testForgotPassword.js",
+    "seed": "node src/database/seed.js",
+    "clean:mock": "node scripts/cleanup-mock-data.js",
+    "posttest": "node scripts/cleanup-mock-data.js"
   },
   "keywords": [],
   "author": "",
@@ -28,7 +31,8 @@
     "express-validator": "^7.3.2",
     "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
-    "multer": "^2.4.0"
+    "multer": "^2.4.0",
+    "nodemailer": "^10.1.2"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

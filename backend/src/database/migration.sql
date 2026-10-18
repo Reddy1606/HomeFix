@@ -147,3 +147,17 @@ CREATE POLICY "Service role can do everything on bookings" ON bookings
 CREATE POLICY "Service role can do everything on reviews" ON reviews
     FOR ALL USING (true) WITH CHECK (true);
 
+-- ==================== BẢNG OTP CODES (TÙY CHỌN CHO EMAIL OTP) ====================
+-- Lưu trữ mã OTP xác thực quên mật khẩu nếu chuyển từ in-memory sang database
+CREATE TABLE IF NOT EXISTS otp_codes (
+    id              UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    email           VARCHAR(255) NOT NULL,
+    otp_code        VARCHAR(6) NOT NULL,
+    attempts        INT DEFAULT 0,
+    expires_at      TIMESTAMPTZ NOT NULL,
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_otp_email ON otp_codes(email);
+
+

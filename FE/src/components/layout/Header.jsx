@@ -18,6 +18,7 @@ function getNavLinks(user) {
   if (user?.role === 'technician') {
     return [
       { to: '/', label: 'Trang chủ' },
+      { to: '/technician/jobs', label: 'Cổng nhận việc ⚡' },
       { to: '/services', label: 'Bảng giá dịch vụ' },
       { to: '/profile', label: 'Hồ sơ thợ (KYC)' },
       { to: '/#contact', label: 'Hỗ trợ kỹ thuật' },
@@ -151,10 +152,10 @@ export default function Header() {
             </Link>
           ) : user?.role === 'technician' ? (
             <Link
-              to="/profile"
+              to={user.is_verified ? '/technician/jobs' : '/profile'}
               className="rounded-full bg-brand-600 px-4 py-2 text-sm font-bold text-white shadow-md shadow-brand-500/30 transition hover:scale-105 hover:bg-brand-700"
             >
-              🔧 {user.is_verified ? 'Hồ sơ Thợ' : 'Xác minh KYC'}
+              {user.is_verified ? '⚡ Nhận việc ngay' : '🔧 Xác minh KYC'}
             </Link>
           ) : (
             <Link
@@ -246,11 +247,11 @@ export default function Header() {
                 </Link>
               ) : user?.role === 'technician' ? (
                 <Link
-                  to="/profile"
+                  to={user.is_verified ? '/technician/jobs' : '/profile'}
                   onClick={closeMenu}
                   className="rounded-lg bg-brand-600 px-3 py-2 text-center text-sm font-semibold text-white"
                 >
-                  🔧 {user.is_verified ? 'Hồ sơ Thợ' : 'Xác minh KYC'}
+                  {user.is_verified ? '⚡ Nhận việc ngay' : '🔧 Xác minh KYC'}
                 </Link>
               ) : (
                 <Link

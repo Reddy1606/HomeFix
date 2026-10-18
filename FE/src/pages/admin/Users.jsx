@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   fetchAdminUsers,
@@ -49,6 +49,7 @@ export default function Users() {
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
+  const [confirmDialog, setConfirmDialog] = useState(null);
 
   const filter = (patch) => {
     const next = new URLSearchParams(searchParams);
@@ -63,51 +64,79 @@ export default function Users() {
     filter({ search: search.trim(), page: 1 });
   };
 
-  const handleVerify = async (user, newStatus) => {
-    const actionText = newStatus ? 'xác minh KYC cho thợ' : 'hủy xác minh thợ';
-    if (!window.confirm(`Bạn có chắc chắn muốn ${actionText} "${user.full_name}" không?`)) return;
+  const hasSubmittedKyc = (u) => Boolean(u?.cccd_number || u?.cccd_image);
 
-    setBusy(true);
+  const handleVerify = (user, newStatus) => {
     setNotice('');
     setError('');
-    try {
-      await verifyTechnician(user.id, newStatus);
-      setNotice(`Đã ${actionText} thành công!`);
-      if (selectedUser?.id === user.id) {
-        setSelectedUser((prev) => ({
-          ...prev,
-          is_verified: newStatus,
-          skill_verified: newStatus,
-        }));
-      }
-      resource.reload();
-    } catch (err) {
-      setError(err.response?.data?.message || 'Có lỗi xảy ra khi cập nhật xác minh.');
-    } finally {
-      setBusy(false);
+
+    // Nếu muốn phê duyệt mà thợ chưa nộp hồ sơ KYC
+    if (newStatus && !hasSubmittedKyc(user)) {
+      const msg = `Không thể phê duyệt: Kỹ thuật viên "${user.full_name || user.email}" chưa nộp hồ sơ xác minh KYC (chưa có số CCCD hoặc ảnh chụp CCCD)!`;
+      setError(msg);
+      return;
     }
+
+    const actionText = newStatus ? 'xác minh và phê duyệt KYC cho thợ' : 'hủy xác minh KYC của thợ';
+
+    setConfirmDialog({
+      title: newStatus ? 'Xác nhận phê duyệt KYC' : 'Xác nhận hủy phê duyệt KYC',
+      icon: newStatus ? '✅' : '⚠️',
+      message: `Bạn có chắc chắn muốn ${actionText} "${user.full_name || user.email}" không?`,
+      confirmText: newStatus ? 'Đồng ý phê duyệt' : 'Xác nhận hủy',
+      confirmColor: newStatus ? '#16a34a' : '#d97706',
+      onConfirm: async () => {
+        setBusy(true);
+        setNotice('');
+        setError('');
+        try {
+          await verifyTechnician(user.id, newStatus);
+          setNotice(`Đã ${actionText} "${user.full_name || user.email}" thành công!`);
+          if (selectedUser?.id === user.id) {
+            setSelectedUser((prev) => ({
+              ...prev,
+              is_verified: newStatus,
+              skill_verified: newStatus,
+            }));
+          }
+          resource.reload();
+        } catch (err) {
+          setError(err.response?.data?.message || 'Có lỗi xảy ra khi cập nhật xác minh.');
+        } finally {
+          setBusy(false);
+        }
+      },
+    });
   };
 
-  const handleToggleStatus = async (user) => {
+  const handleToggleStatus = (user) => {
     const nextActive = !user.is_active;
     const actionText = nextActive ? 'mở khóa tài khoản' : 'khóa tài khoản';
-    if (!window.confirm(`Bạn có chắc chắn muốn ${actionText} của "${user.full_name}" không?`)) return;
 
-    setBusy(true);
-    setNotice('');
-    setError('');
-    try {
-      await toggleUserStatus(user.id, nextActive);
-      setNotice(`Đã ${actionText} thành công!`);
-      if (selectedUser?.id === user.id) {
-        setSelectedUser((prev) => ({ ...prev, is_active: nextActive }));
-      }
-      resource.reload();
-    } catch (err) {
-      setError(err.response?.data?.message || 'Có lỗi xảy ra khi thay đổi trạng thái.');
-    } finally {
-      setBusy(false);
-    }
+    setConfirmDialog({
+      title: nextActive ? 'Mở khóa tài khoản' : 'Khóa tài khoản người dùng',
+      icon: nextActive ? '🔓' : '🔒',
+      message: `Bạn có chắc chắn muốn ${actionText} của "${user.full_name || user.email}" không?`,
+      confirmText: nextActive ? 'Mở khóa' : 'Khóa tài khoản',
+      confirmColor: nextActive ? '#16a34a' : '#dc2626',
+      onConfirm: async () => {
+        setBusy(true);
+        setNotice('');
+        setError('');
+        try {
+          await toggleUserStatus(user.id, nextActive);
+          setNotice(`Đã ${actionText} "${user.full_name || user.email}" thành công!`);
+          if (selectedUser?.id === user.id) {
+            setSelectedUser((prev) => ({ ...prev, is_active: nextActive }));
+          }
+          resource.reload();
+        } catch (err) {
+          setError(err.response?.data?.message || 'Có lỗi xảy ra khi thay đổi trạng thái.');
+        } finally {
+          setBusy(false);
+        }
+      },
+    });
   };
 
   const handleOpenRoleModal = (user) => {
@@ -116,27 +145,35 @@ export default function Users() {
     setError('');
   };
 
-  const handleUpdateRole = async (user, targetRole) => {
+  const handleUpdateRole = (user, targetRole) => {
     if (!targetRole || targetRole === user.role) return;
     const targetLabel = ROLE_LABELS[targetRole]?.label || targetRole;
-    if (!window.confirm(`Bạn có chắc chắn muốn chuyển vai trò của "${user.full_name}" sang "${targetLabel}" không?`)) return;
 
-    setBusy(true);
-    setNotice('');
-    setError('');
-    try {
-      await updateUserRole(user.id, targetRole);
-      setNotice(`Đã đổi vai trò của "${user.full_name}" sang "${targetLabel}" thành công!`);
-      if (selectedUser?.id === user.id) {
-        setSelectedUser((prev) => ({ ...prev, role: targetRole }));
-      }
-      setRoleModalUser(null);
-      resource.reload();
-    } catch (err) {
-      setError(err.response?.data?.message || 'Có lỗi xảy ra khi cập nhật vai trò.');
-    } finally {
-      setBusy(false);
-    }
+    setConfirmDialog({
+      title: 'Thay đổi phân quyền vai trò',
+      icon: '🛡️',
+      message: `Bạn có chắc chắn muốn chuyển vai trò của "${user.full_name || user.email}" sang "${targetLabel}" không?`,
+      confirmText: 'Chuyển vai trò',
+      confirmColor: '#0d9488',
+      onConfirm: async () => {
+        setBusy(true);
+        setNotice('');
+        setError('');
+        try {
+          await updateUserRole(user.id, targetRole);
+          setNotice(`Đã đổi vai trò của "${user.full_name || user.email}" sang "${targetLabel}" thành công!`);
+          if (selectedUser?.id === user.id) {
+            setSelectedUser((prev) => ({ ...prev, role: targetRole }));
+          }
+          setRoleModalUser(null);
+          resource.reload();
+        } catch (err) {
+          setError(err.response?.data?.message || 'Có lỗi xảy ra khi cập nhật vai trò.');
+        } finally {
+          setBusy(false);
+        }
+      },
+    });
   };
 
   // Tính số liệu nhanh trên trang hiện tại
@@ -161,15 +198,69 @@ export default function Users() {
         </button>
       </div>
 
+      {/* Toast thông báo nổi trên màn hình */}
+      {(notice || error) && (
+        <div
+          style={{
+            position: 'fixed',
+            top: '24px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 100020,
+            minWidth: '340px',
+            maxWidth: '90vw',
+            padding: '14px 20px',
+            borderRadius: '12px',
+            background: error ? '#fef2f2' : '#f0fdf4',
+            border: `1.5px solid ${error ? '#fca5a5' : '#86efac'}`,
+            color: error ? '#991b1b' : '#166534',
+            boxShadow: '0 20px 30px -8px rgba(0, 0, 0, 0.15)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '14px',
+            fontWeight: 600,
+            fontSize: '0.92rem',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '1.25rem' }}>{error ? '⚠️' : '✅'}</span>
+            <span>{error || notice}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setNotice('');
+              setError('');
+            }}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              color: error ? '#991b1b' : '#166534',
+              fontSize: '1.25rem',
+              lineHeight: 1,
+              padding: '0 4px',
+              fontWeight: 700,
+            }}
+            title="Đóng thông báo"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       {notice && (
-        <div style={{ background: '#f0fdf4', color: '#166534', padding: '12px 16px', borderRadius: '10px', marginBottom: '16px', border: '1px solid #bbf7d0', fontWeight: 600 }}>
-          ✅ {notice}
+        <div style={{ background: '#f0fdf4', color: '#166534', padding: '12px 16px', borderRadius: '10px', marginBottom: '16px', border: '1px solid #bbf7d0', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>✅ {notice}</span>
+          <button type="button" onClick={() => setNotice('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#166534', fontWeight: 700 }}>×</button>
         </div>
       )}
 
       {error && (
-        <div style={{ background: '#fef2f2', color: '#991b1b', padding: '12px 16px', borderRadius: '10px', marginBottom: '16px', border: '1px solid #fecaca', fontWeight: 600 }}>
-          ⚠️ {error}
+        <div style={{ background: '#fef2f2', color: '#991b1b', padding: '12px 16px', borderRadius: '10px', marginBottom: '16px', border: '1px solid #fecaca', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>⚠️ {error}</span>
+          <button type="button" onClick={() => setError('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#991b1b', fontWeight: 700 }}>×</button>
         </div>
       )}
 
@@ -353,7 +444,7 @@ export default function Users() {
                               >
                                 ✓ Đã duyệt
                               </span>
-                            ) : u.cccd_image || u.cccd_number || u.criminal_record_url ? (
+                            ) : hasSubmittedKyc(u) ? (
                               <span
                                 style={{
                                   display: 'inline-flex',
@@ -377,15 +468,15 @@ export default function Users() {
                                   alignItems: 'center',
                                   gap: '4px',
                                   fontSize: '0.75rem',
-                                  fontWeight: 500,
-                                  color: '#64748b',
-                                  background: '#f1f5f9',
+                                  fontWeight: 600,
+                                  color: '#dc2626',
+                                  background: '#fef2f2',
                                   padding: '4px 8px',
                                   borderRadius: '6px',
-                                  border: '1px solid #cbd5e1',
+                                  border: '1px solid #fecaca',
                                 }}
                               >
-                                Chưa nộp hồ sơ
+                                ✕ Chưa nộp hồ sơ
                               </span>
                             )
                           ) : (
@@ -491,6 +582,19 @@ export default function Users() {
           title={`Chi tiết tài khoản #${String(selectedUser.id).slice(0, 8)}`}
           onClose={() => setSelectedUser(null)}
         >
+          {error && (
+            <div style={{ background: '#fef2f2', color: '#991b1b', padding: '10px 14px', borderRadius: '8px', marginBottom: '14px', border: '1px solid #fecaca', fontWeight: 600, fontSize: '0.88rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>⚠️ {error}</span>
+              <button type="button" onClick={() => setError('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#991b1b', fontWeight: 700 }}>×</button>
+            </div>
+          )}
+          {notice && (
+            <div style={{ background: '#f0fdf4', color: '#166534', padding: '10px 14px', borderRadius: '8px', marginBottom: '14px', border: '1px solid #bbf7d0', fontWeight: 600, fontSize: '0.88rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>✅ {notice}</span>
+              <button type="button" onClick={() => setNotice('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#166534', fontWeight: 700 }}>×</button>
+            </div>
+          )}
+
           <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '12px 16px', fontSize: '0.88rem' }}>
             <span style={{ color: '#64748b' }}>Họ và tên:</span>
             <strong>{selectedUser.full_name || 'Chưa đặt tên'}</strong>
@@ -543,16 +647,23 @@ export default function Users() {
                     <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '3px 8px', borderRadius: '6px', background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0' }}>
                       ✓ ĐÃ PHÊ DUYỆT
                     </span>
-                  ) : selectedUser.cccd_image || selectedUser.cccd_number || selectedUser.criminal_record_url ? (
+                  ) : hasSubmittedKyc(selectedUser) ? (
                     <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '3px 8px', borderRadius: '6px', background: '#fffbeb', color: '#d97706', border: '1px solid #fde68a' }}>
                       ⏳ CHỜ ADMIN DUYỆT
                     </span>
                   ) : (
-                    <span style={{ fontSize: '0.75rem', fontWeight: 600, padding: '3px 8px', borderRadius: '6px', background: '#f1f5f9', color: '#64748b', border: '1px solid #cbd5e1' }}>
-                      CHƯA NỘP HỒ SƠ
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '3px 8px', borderRadius: '6px', background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' }}>
+                      ✕ CHƯA NỘP HỒ SƠ
                     </span>
                   )}
                 </div>
+
+                {!selectedUser.is_verified && !hasSubmittedKyc(selectedUser) && (
+                  <div style={{ background: '#fef2f2', border: '1.5px solid #fca5a5', color: '#991b1b', padding: '10px 14px', borderRadius: '8px', fontSize: '0.84rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
+                    <span style={{ fontSize: '1.1rem' }}>⚠️</span>
+                    <span>Kỹ thuật viên này <strong>chưa nộp hồ sơ KYC</strong>. Quản trị viên không thể thực hiện phê duyệt!</span>
+                  </div>
+                )}
 
                 <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '10px 14px', fontSize: '0.85rem' }}>
                   <span style={{ color: '#64748b' }}>Số CCCD:</span>
@@ -598,6 +709,65 @@ export default function Users() {
 
                   <span style={{ color: '#64748b' }}>Đánh giá thợ:</span>
                   <span>⭐ {selectedUser.rating_avg ? `${selectedUser.rating_avg} / 5` : 'Chưa có lượt đánh giá nào'}</span>
+
+                  {/* Hành động xét duyệt KYC được xếp trực tiếp trong thẻ KYC */}
+                  <div
+                    style={{
+                      gridColumn: 'span 2',
+                      marginTop: '12px',
+                      paddingTop: '12px',
+                      borderTop: '1px dashed #cbd5e1',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      flexWrap: 'wrap',
+                      gap: '10px',
+                    }}
+                  >
+                    <div>
+                      <strong style={{ display: 'block', fontSize: '0.88rem', color: '#0f172a' }}>
+                        Xử lý hồ sơ thợ:
+                      </strong>
+                      <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                        {selectedUser.is_verified
+                          ? 'Hồ sơ đã được phê duyệt. Có thể hủy duyệt nếu cần.'
+                          : hasSubmittedKyc(selectedUser)
+                          ? 'Đã có CCCD. Sẵn sàng xét duyệt kích hoạt tài khoản.'
+                          : 'Chưa có hồ sơ CCCD, không thể phê duyệt.'}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={busy}
+                      className="hf-button small"
+                      style={{
+                        background: selectedUser.is_verified
+                          ? '#f59e0b'
+                          : !hasSubmittedKyc(selectedUser)
+                          ? '#94a3b8'
+                          : '#16a34a',
+                        borderColor: 'transparent',
+                        color: '#ffffff',
+                        fontWeight: 700,
+                        padding: '8px 18px',
+                        cursor: !selectedUser.is_verified && !hasSubmittedKyc(selectedUser) ? 'not-allowed' : 'pointer',
+                      }}
+                      onClick={() => {
+                        if (!selectedUser.is_verified && !hasSubmittedKyc(selectedUser)) {
+                          setError('⚠️ Không thể phê duyệt: Kỹ thuật viên chưa nộp hồ sơ xác minh KYC (chưa có số CCCD hoặc ảnh chụp CCCD)!');
+                          return;
+                        }
+                        handleVerify(selectedUser, !selectedUser.is_verified);
+                      }}
+                    >
+                      {selectedUser.is_verified
+                        ? 'Hủy duyệt thợ'
+                        : !hasSubmittedKyc(selectedUser)
+                        ? '⚠️ Chưa nộp hồ sơ để duyệt'
+                        : '✓ Phê duyệt KYC thợ'}
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -609,21 +779,7 @@ export default function Users() {
             <span>{dateLabel(selectedUser.created_at)}</span>
           </div>
 
-          <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-            {selectedUser.role === 'technician' && (
-              <button
-                type="button"
-                disabled={busy}
-                className="hf-button small"
-                style={{
-                  background: selectedUser.is_verified ? '#f59e0b' : '#16a34a',
-                }}
-                onClick={() => handleVerify(selectedUser, !selectedUser.is_verified)}
-              >
-                {selectedUser.is_verified ? 'Hủy duyệt thợ' : 'Phê duyệt KYC thợ'}
-              </button>
-            )}
-
+          <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
             <button
               type="button"
               className="hf-button secondary small"
@@ -721,6 +877,104 @@ export default function Users() {
           </div>
         </Modal>
       )}
+
+      {/* Modal xác nhận trên màn hình (dùng showModal để luôn nổi trên cùng mọi modal khác) */}
+      {confirmDialog && (
+        <ConfirmModal
+          dialog={confirmDialog}
+          busy={busy}
+          onClose={() => setConfirmDialog(null)}
+        />
+      )}
     </>
+  );
+}
+
+function ConfirmModal({ dialog, onClose, busy }) {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (el && !el.open) {
+      el.showModal();
+    }
+    return () => {
+      if (el?.open) el.close();
+    };
+  }, []);
+
+  if (!dialog) return null;
+
+  return (
+    <dialog
+      ref={ref}
+      className="hf-modal confirm-dialog"
+      style={{
+        maxWidth: '460px',
+        padding: '24px 26px',
+        borderRadius: '16px',
+        border: '1px solid #e2e8f0',
+        boxShadow: '0 25px 60px rgba(0, 0, 0, 0.35)',
+        zIndex: 100050,
+      }}
+      onCancel={(e) => {
+        e.preventDefault();
+        if (!busy) onClose();
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
+        <div
+          style={{
+            width: '42px',
+            height: '42px',
+            borderRadius: '10px',
+            background: dialog.confirmColor ? `${dialog.confirmColor}15` : '#eff6ff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '1.35rem',
+            flexShrink: 0,
+          }}
+        >
+          {dialog.icon || 'ℹ️'}
+        </div>
+        <h3 style={{ margin: 0, fontSize: '1.15rem', color: '#0f172a', fontWeight: 700 }}>
+          {dialog.title}
+        </h3>
+      </div>
+
+      <p style={{ margin: '0 0 22px 0', fontSize: '0.94rem', color: '#475569', lineHeight: 1.6 }}>
+        {dialog.message}
+      </p>
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+        <button
+          type="button"
+          className="hf-button secondary small"
+          disabled={busy}
+          onClick={onClose}
+        >
+          {dialog.cancelText || 'Hủy bỏ'}
+        </button>
+        <button
+          type="button"
+          className="hf-button small"
+          disabled={busy}
+          style={{
+            background: dialog.confirmColor || '#16a34a',
+            borderColor: dialog.confirmColor || '#16a34a',
+            color: '#ffffff',
+            fontWeight: 700,
+          }}
+          onClick={async () => {
+            const onConfirm = dialog.onConfirm;
+            onClose();
+            if (onConfirm) await onConfirm();
+          }}
+        >
+          {busy ? 'Đang xử lý…' : dialog.confirmText || 'Xác nhận'}
+        </button>
+      </div>
+    </dialog>
   );
 }

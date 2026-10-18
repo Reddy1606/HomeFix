@@ -180,7 +180,14 @@ export default function Profile() {
         });
       }
     } catch (err) {
-      setNotice({ type: 'error', text: apiError(err) });
+      if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+        setNotice({
+          type: 'error',
+          text: 'Quá trình tải lên quá thời gian chờ (timeout). Vui lòng thử lại.',
+        });
+      } else {
+        setNotice({ type: 'error', text: apiError(err) });
+      }
     } finally {
       setBusy(false);
     }
@@ -211,7 +218,14 @@ export default function Profile() {
       });
       setCertFile(null);
     } catch (err) {
-      setNotice({ type: 'error', text: apiError(err) });
+      if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+        setNotice({
+          type: 'error',
+          text: 'Quá trình tải lên chứng chỉ quá thời gian chờ (timeout). Vui lòng thử lại.',
+        });
+      } else {
+        setNotice({ type: 'error', text: apiError(err) });
+      }
     } finally {
       setBusy(false);
     }
@@ -630,7 +644,7 @@ export default function Profile() {
                     type="submit"
                     disabled={busy}
                   >
-                    {busy ? 'Đang lưu...' : '💾 Lưu & Gửi CCCD'}
+                    {busy ? '⏳ Đang tải lên & lưu hồ sơ...' : '💾 Lưu & Gửi CCCD'}
                   </button>
                 </form>
 
@@ -721,7 +735,7 @@ export default function Profile() {
                     type="submit"
                     disabled={busy}
                   >
-                    {busy ? 'Đang tải lên...' : '📤 Tải lên chứng chỉ'}
+                    {busy ? '⏳ Đang tải lên chứng chỉ...' : '📤 Tải lên chứng chỉ'}
                   </button>
                 </form>
               </div>

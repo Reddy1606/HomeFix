@@ -6,7 +6,7 @@ const API_BASE_URL =
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 8000,
+  timeout: 30000,
 });
 
 // Gắn token đăng nhập (nếu có) vào mọi request, theo chuẩn API Contract của nhóm

@@ -19,3 +19,16 @@ export async function becomeTechnician(payload = {}) {
   return (await apiClient.post('/auth/become-technician', payload)).data.data;
 }
 
+export async function forgotPassword(payload) {
+  return (await apiClient.post('/auth/forgot-password', payload)).data;
+}
+
+export async function verifyOtp(payload) {
+  return (await apiClient.post('/auth/verify-otp', payload)).data;
+}
+
+export async function resetPassword(payload) {
+  return (await apiClient.post('/auth/reset-password', payload)).data;
+}
+
+

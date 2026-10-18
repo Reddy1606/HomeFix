@@ -9,7 +9,9 @@ export async function uploadAvatar(file) {
   const formData = new FormData();
   formData.append('file', file);
 
-  const { data } = await apiClient.post('/upload/avatar', formData);
+  const { data } = await apiClient.post('/upload/avatar', formData, {
+    timeout: 120000,
+  });
   return data.data;
 }
 
@@ -27,7 +29,9 @@ export async function uploadKYC(file, { type = 'cccd', cccd_number = '' } = {}) 
     formData.append('cccd_number', cccd_number);
   }
 
-  const { data } = await apiClient.post('/upload/kyc', formData);
+  const { data } = await apiClient.post('/upload/kyc', formData, {
+    timeout: 120000,
+  });
   return data.data;
 }
 
@@ -40,6 +44,8 @@ export async function uploadServiceImage(file) {
   const formData = new FormData();
   formData.append('file', file);
 
-  const { data } = await apiClient.post('/upload/service-image', formData);
+  const { data } = await apiClient.post('/upload/service-image', formData, {
+    timeout: 120000,
+  });
   return data.data;
 }

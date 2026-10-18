@@ -12,6 +12,7 @@ const adminRoutes = require('./routes/adminRoutes');
 const serviceRoutes = require('./routes/serviceRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
+const technicianRoutes = require('./routes/technicianRoutes');
 
 // Khởi tạo Express app
 const app = express();
@@ -63,6 +64,9 @@ app.use('/api/admin', adminRoutes);
 
 // Upload routes (avatar, kyc, services)
 app.use('/api/upload', uploadRoutes);
+
+// Technician routes (cổng nhận việc & quản lý công việc của thợ)
+app.use('/api/technician', technicianRoutes);
 
 // ==================== ERROR HANDLING ====================
 

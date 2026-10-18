@@ -13,6 +13,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import AuthPage from './pages/auth/AuthPage';
 import Profile from './pages/auth/Profile';
 import BookingHistory from './pages/customer/BookingHistory';
+import TechnicianJobs from './pages/technician/Jobs';
 import AdminLayout from './components/admin/AdminLayout';
 import Dashboard from './pages/admin/Dashboard';
 import Bookings from './pages/admin/Bookings';
@@ -42,10 +43,15 @@ export default function App() {
               path="/register-technician"
               element={<AuthPage key="register-tech" mode="register-technician" />}
             />
+            <Route
+              path="/forgot-password"
+              element={<AuthPage key="forgot-password" mode="forgot-password" />}
+            />
             <Route element={<ProtectedRoute />}>
               <Route path="/profile" element={<Profile />} />
               <Route path="/my-bookings" element={<BookingHistory />} />
               <Route path="/my-bookings/:id" element={<BookingDetail />} />
+              <Route path="/technician/jobs" element={<TechnicianJobs />} />
             </Route>
 
           <Route path="*" element={<NotFound />} />

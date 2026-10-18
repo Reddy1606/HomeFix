@@ -89,6 +89,14 @@ const verifyUser = async (req, res, next) => {
       });
     }
 
+    // Không cho phép phê duyệt nếu thợ chưa nộp hồ sơ KYC
+    if (verified && !existingUser.cccd_number && !existingUser.cccd_image) {
+      return res.status(400).json({
+        success: false,
+        message: 'Không thể phê duyệt: Kỹ thuật viên chưa nộp hồ sơ xác minh KYC (chưa có số CCCD hoặc ảnh chụp CCCD).',
+      });
+    }
+
     const user = await User.verifyTechnician(req.params.id, verified);
 
     res.status(200).json({

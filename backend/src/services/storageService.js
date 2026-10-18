@@ -29,14 +29,20 @@ async function uploadFile({ buffer, originalname, mimetype, folder = 'general' }
   const uniqueName = `${Date.now()}-${crypto.randomBytes(4).toString('hex')}${ext}`;
   const storagePath = `${folder}/${uniqueName}`;
 
-  // 1. Thử tải lên Supabase Storage
+  // 1. Thử tải lên Supabase Storage với timeout 6s (nếu mạng quốc tế chậm, tự động fallback lưu local)
   try {
-    const { data, error } = await supabase.storage
+    const supabaseUploadPromise = supabase.storage
       .from(BUCKET_NAME)
       .upload(storagePath, buffer, {
         contentType: mimetype,
         upsert: true,
       });
+
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Supabase storage upload timeout (vượt quá 6s)')), 6000)
+    );
+
+    const { data, error } = await Promise.race([supabaseUploadPromise, timeoutPromise]);
 
     if (!error && data) {
       const { data: publicData } = supabase.storage
@@ -52,7 +58,7 @@ async function uploadFile({ buffer, originalname, mimetype, folder = 'general' }
       }
     }
   } catch (err) {
-    console.warn(`[StorageService] Supabase upload failed, falling back to local:`, err.message);
+    console.warn(`[StorageService] Supabase upload skipped/failed (${err.message}), falling back to local storage.`);
   }
 
   // 2. Cơ chế Fallback: Lưu vào thư mục public/uploads trên máy

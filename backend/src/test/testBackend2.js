@@ -78,9 +78,19 @@ server.listen(PORT, async () => {
     assert(adminToken && customer.token && customer2.token && techVerified.id && techUnverified.id,
       'Chuẩn bị: đăng nhập admin, tạo 2 customer + 2 thợ');
 
+    // Thợ nộp hồ sơ KYC trước khi được admin duyệt
+    await call('PUT', '/api/auth/me', {
+      token: techVerified.token,
+      body: { cccd_number: '079203001234' },
+    });
+
     // Admin xác minh 1 thợ (API của Backend 1)
     r = await call('PUT', `/api/admin/users/${techVerified.id}/verify`, { token: adminToken, body: { verified: true } });
     assert(r.status === 200, 'Chuẩn bị: admin xác minh thợ (PUT /api/admin/users/:id/verify)');
+
+    // Admin thử xác minh thợ chưa nộp hồ sơ -> phải bị từ chối 400
+    const failVerify = await call('PUT', `/api/admin/users/${techUnverified.id}/verify`, { token: adminToken, body: { verified: true } });
+    assert(failVerify.status === 400, 'Admin không thể duyệt thợ chưa nộp hồ sơ KYC (HTTP 400)');
 
     // ==================== 1. SERVICES (PUBLIC) ====================
     r = await call('GET', '/api/services');

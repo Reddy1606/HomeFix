@@ -7,6 +7,9 @@ const {
   updateMe,
   changePassword,
   becomeTechnician,
+  forgotPassword,
+  verifyOtp,
+  resetPassword,
 } = require('../controllers/authController');
 const authenticate = require('../middlewares/authMiddleware');
 const {
@@ -14,6 +17,9 @@ const {
   loginValidation,
   updateProfileValidation,
   changePasswordValidation,
+  forgotPasswordValidation,
+  verifyOtpValidation,
+  resetPasswordValidation,
 } = require('../validators/authValidator');
 
 // ==================== PUBLIC ROUTES ====================
@@ -23,6 +29,15 @@ router.post('/register', registerValidation, register);
 
 // POST /api/auth/login - Đăng nhập
 router.post('/login', loginValidation, login);
+
+// POST /api/auth/forgot-password - Yêu cầu gửi mã OTP về email
+router.post('/forgot-password', forgotPasswordValidation, forgotPassword);
+
+// POST /api/auth/verify-otp - Xác thực mã OTP
+router.post('/verify-otp', verifyOtpValidation, verifyOtp);
+
+// POST /api/auth/reset-password - Đặt lại mật khẩu mới với mã OTP
+router.post('/reset-password', resetPasswordValidation, resetPassword);
 
 // ==================== PRIVATE ROUTES (JWT required) ====================
 

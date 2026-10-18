@@ -97,9 +97,55 @@ const changePasswordValidation = [
     .withMessage('Mật khẩu mới phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 số.'),
 ];
 
+// Validate yêu cầu OTP quên mật khẩu
+const forgotPasswordValidation = [
+  body('email')
+    .isEmail()
+    .withMessage('Email không hợp lệ.')
+    .normalizeEmail(),
+];
+
+// Validate xác thực mã OTP
+const verifyOtpValidation = [
+  body('email')
+    .isEmail()
+    .withMessage('Email không hợp lệ.')
+    .normalizeEmail(),
+
+  body('otp')
+    .isLength({ min: 6, max: 6 })
+    .withMessage('Mã OTP phải có đúng 6 chữ số.')
+    .isNumeric()
+    .withMessage('Mã OTP chỉ bao gồm các chữ số.'),
+];
+
+// Validate đặt lại mật khẩu với OTP
+const resetPasswordValidation = [
+  body('email')
+    .isEmail()
+    .withMessage('Email không hợp lệ.')
+    .normalizeEmail(),
+
+  body('otp')
+    .isLength({ min: 6, max: 6 })
+    .withMessage('Mã OTP phải có đúng 6 chữ số.')
+    .isNumeric()
+    .withMessage('Mã OTP chỉ bao gồm các chữ số.'),
+
+  body('new_password')
+    .isLength({ min: 8 })
+    .withMessage('Mật khẩu mới phải có ít nhất 8 ký tự.')
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+    .withMessage('Mật khẩu mới phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 số.'),
+];
+
 module.exports = {
   registerValidation,
   loginValidation,
   updateProfileValidation,
   changePasswordValidation,
+  forgotPasswordValidation,
+  verifyOtpValidation,
+  resetPasswordValidation,
 };
+
