@@ -72,6 +72,31 @@ const subscribePackage = async (req, res, next) => {
 };
 
 /**
+ * @desc    Khách hàng hủy gói dịch vụ đang hoạt động
+ * @route   POST /api/packages/cancel
+ * @access  Private (customer)
+ */
+const cancelSubscription = async (req, res, next) => {
+  try {
+    const cancelled = await Subscription.cancel(req.user.id);
+    if (!cancelled) {
+      return res.status(400).json({
+        success: false,
+        message: 'Bạn hiện không có gói dịch vụ nào đang hoạt động để hủy.',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Hủy gói dịch vụ thành công.',
+      data: { subscription: cancelled },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * @desc    Admin lấy danh sách tất cả các gói dịch vụ
  * @route   GET /api/admin/packages
  * @access  Private (admin)
@@ -144,6 +169,7 @@ module.exports = {
   getPackages,
   getMySubscription,
   subscribePackage,
+  cancelSubscription,
   adminGetPackages,
   adminUpdatePackage,
   adminGetSubscriptions,

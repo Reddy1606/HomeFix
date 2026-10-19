@@ -7,6 +7,7 @@ import {
   getMyJobs,
   updateJobStatus,
 } from '../../api/technician';
+import { formatBookingCode } from '../../utils/bookingCode';
 
 const STATUS_LABELS = {
   pending: { label: 'Chờ nhận việc', bg: '#fef3c7', color: '#92400e', border: '#fde68a' },
@@ -103,7 +104,7 @@ export default function TechnicianJobs() {
         setNotice('');
         try {
           await claimJob(job.id);
-          setNotice(`✅ Bạn đã tiếp nhận thành công đơn việc #${job.id.slice(0, 8)}! Hãy kiểm tra tab "Công việc của tôi" để liên hệ khách.`);
+          setNotice(`✅ Bạn đã tiếp nhận thành công đơn việc ${formatBookingCode(job)}! Hãy kiểm tra tab "Công việc của tôi" để liên hệ khách.`);
           // Chuyển sang tab Công việc của tôi
           setActiveTab('my-jobs');
         } catch (err) {
@@ -125,8 +126,8 @@ export default function TechnicianJobs() {
       confirmText: isCompleted ? 'Xác nhận hoàn tất' : 'Bắt đầu sửa chữa',
       confirmColor: isCompleted ? '#16a34a' : '#2563eb',
       message: isCompleted
-        ? `Bạn đã hoàn tất công việc cho đơn #${job.id.slice(0, 8)}. Hệ thống sẽ ghi nhận hoàn thành và kích hoạt thời hạn bảo hành cho khách.`
-        : `Bạn đã có mặt tại nhà khách hàng và bắt đầu tiến hành sửa chữa cho đơn #${job.id.slice(0, 8)}?`,
+        ? `Bạn đã hoàn tất công việc cho đơn ${formatBookingCode(job)}. Hệ thống sẽ ghi nhận hoàn thành và kích hoạt thời hạn bảo hành cho khách.`
+        : `Bạn đã có mặt tại nhà khách hàng và bắt đầu tiến hành sửa chữa cho đơn ${formatBookingCode(job)}?`,
       onConfirm: async () => {
         setBusy(true);
         setError('');
@@ -417,8 +418,8 @@ export default function TechnicianJobs() {
                           </span>
                         )}
 
-                        <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-                          #{job.id.slice(0, 8)}
+                        <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#64748b', background: '#f1f5f9', padding: '2px 8px', borderRadius: '6px' }}>
+                          {formatBookingCode(job)}
                         </span>
                       </div>
 
@@ -570,8 +571,8 @@ export default function TechnicianJobs() {
                     {/* Header đơn */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#64748b' }}>
-                          MÃ ĐƠN #{job.id.slice(0, 8)}
+                        <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#334155', background: '#f1f5f9', padding: '3px 10px', borderRadius: '6px' }}>
+                          MÃ ĐƠN {formatBookingCode(job)}
                         </span>
                         <span
                           style={{

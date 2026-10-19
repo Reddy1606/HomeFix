@@ -6,6 +6,7 @@ const {
   getPackages,
   getMySubscription,
   subscribePackage,
+  cancelSubscription,
   adminGetPackages,
   adminUpdatePackage,
   adminGetSubscriptions,
@@ -17,6 +18,7 @@ router.get('/', getPackages);
 // 2. Tuyến đường Khách hàng (User đã đăng nhập)
 router.get('/my-subscription', authenticate, authorize('customer'), getMySubscription);
 router.post('/subscribe', authenticate, authorize('customer'), subscribePackage);
+router.post('/cancel', authenticate, authorize('customer'), cancelSubscription);
 
 // 3. Tuyến đường Quản trị viên (Admin)
 router.get('/admin/list', authenticate, authorize('admin'), adminGetPackages);

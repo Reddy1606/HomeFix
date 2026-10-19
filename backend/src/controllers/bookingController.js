@@ -6,13 +6,16 @@ const Subscription = require('../models/Subscription');
 const { parsePagination, buildPagination } = require('../utils/pagination');
 const { CUSTOMER_CANCELLABLE, STATUS_LABELS } = require('../utils/bookingStatus');
 
+const { formatBookingCode } = require('../utils/bookingCode');
+
 /**
- * Thêm cờ can_cancel và can_review để Frontend dễ dàng render giao diện
+ * Thêm cờ can_cancel, can_review và booking_code để Frontend dễ dàng render giao diện
  */
 const withFlags = (booking) => {
   const hasReview = Array.isArray(booking.reviews) ? booking.reviews.length > 0 : !!booking.reviews;
   return {
     ...booking,
+    booking_code: formatBookingCode(booking),
     can_cancel: CUSTOMER_CANCELLABLE.includes(booking.status),
     can_review: booking.status === 'completed' && !hasReview,
   };

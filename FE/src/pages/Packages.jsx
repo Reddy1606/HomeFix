@@ -1,21 +1,24 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/auth';
-import { fetchPackages, fetchMySubscription, subscribePackage } from '../api/packages';
+import { useToast } from '../context/ToastContext';
+import { fetchPackages, fetchMySubscription, cancelSubscription } from '../api/packages';
 import { formatPrice } from '../api/services';
 
 export default function Packages() {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
 
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeSub, setActiveSub] = useState(null);
-  const [selectedPkg, setSelectedPkg] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [successModal, setSuccessModal] = useState(null);
-  const [errorMsg, setErrorMsg] = useState('');
 
+  // States quản lý hủy gói
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+
+  // Tải danh sách gói và thông tin gói của khách hàng (KHÔNG gây vòng lặp)
   const loadData = async () => {
     setLoading(true);
     try {
@@ -26,6 +29,23 @@ export default function Packages() {
         const subData = await fetchMySubscription();
         if (subData?.has_subscription) {
           setActiveSub(subData.subscription);
+          // Chỉ cập nhật context nếu chưa có hoặc khác id để tránh re-render liên tục
+          if (setUser && (!user.is_vip || user.subscription?.id !== subData.subscription.id)) {
+            setUser((prev) => ({
+              ...prev,
+              is_vip: true,
+              subscription: subData.subscription,
+            }));
+          }
+        } else {
+          setActiveSub(null);
+          if (setUser && user.is_vip) {
+            setUser((prev) => ({
+              ...prev,
+              is_vip: false,
+              subscription: null,
+            }));
+          }
         }
       }
     } catch (err) {
@@ -35,45 +55,44 @@ export default function Packages() {
     }
   };
 
+  // Chỉ gọi lại khi user?.id thay đổi, tuyệt đối không phụ thuộc vào toàn bộ object user
   useEffect(() => {
     loadData();
-  }, [user]);
+  }, [user?.id]);
 
-  const handleOpenSubscribe = (pkg) => {
+  // Bắt đầu quy trình thanh toán gói -> Chuyển sang trang Checkout riêng biệt
+  const handleSelectPackage = (pkg) => {
+    const targetUrl = `/packages/checkout?pkgId=${pkg.id || pkg.code}`;
     if (!user) {
-      navigate(`/login?redirect=${encodeURIComponent('/packages')}`);
+      navigate(`/login?redirect=${encodeURIComponent(targetUrl)}`);
       return;
     }
     if (user.role === 'technician') {
-      alert('Tài khoản thợ không thể đăng ký gói dịch vụ gia đình. Vui lòng sử dụng tài khoản khách hàng.');
+      showToast('Tài khoản thợ không thể đăng ký gói dịch vụ gia đình. Vui lòng sử dụng tài khoản khách hàng.', 'error');
       return;
     }
-    setSelectedPkg(pkg);
-    setErrorMsg('');
+    navigate(targetUrl);
   };
 
-  const handleConfirmSubscribe = async () => {
-    if (!selectedPkg) return;
-    setSubmitting(true);
-    setErrorMsg('');
-
+  // Xử lý Hủy gói dịch vụ
+  const handleCancelSub = async () => {
+    setCancelling(true);
     try {
-      const res = await subscribePackage(selectedPkg.id, 'bank_transfer');
-      setSelectedPkg(null);
-      setSuccessModal({
-        packageName: selectedPkg.name,
-        badge: selectedPkg.badge,
-        expiry: res.data?.subscription?.end_date,
-      });
-      // Tải lại trạng thái subscription
-      const subData = await fetchMySubscription();
-      if (subData?.has_subscription) {
-        setActiveSub(subData.subscription);
+      await cancelSubscription();
+      setActiveSub(null);
+      if (setUser) {
+        setUser((prev) => ({
+          ...prev,
+          is_vip: false,
+          subscription: null,
+        }));
       }
+      setShowCancelConfirm(false);
+      showToast('Đã hủy gói dịch vụ thành công.', 'success');
     } catch (err) {
-      setErrorMsg(err.response?.data?.message || 'Không thể đăng ký gói. Vui lòng thử lại sau.');
+      showToast(err.response?.data?.message || 'Không thể hủy gói. Vui lòng thử lại sau.', 'error');
     } finally {
-      setSubmitting(false);
+      setCancelling(false);
     }
   };
 
@@ -137,10 +156,10 @@ export default function Packages() {
         </div>
       </section>
 
-      {/* BANNER GÓI ĐANG HOẠT ĐỘNG (NẾU ĐÃ MUA) */}
+      {/* BANNER GÓI ĐANG HOẠT ĐỘNG (HIỂN THỊ KHI ĐÃ LÀ VIP + NÚT HỦY GÓI) */}
       {activeSub && (
         <div className="mx-auto -mt-6 max-w-5xl px-4 sm:px-6">
-          <div className="relative overflow-hidden rounded-2xl border-2 border-amber-400 bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-600 p-6 text-white shadow-xl shadow-amber-500/20">
+          <div className="relative overflow-hidden rounded-2xl border-2 border-amber-400 bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-600 p-6 text-white shadow-xl shadow-amber-500/20 animate-fade-in">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 text-3xl shadow-inner">
@@ -175,8 +194,15 @@ export default function Packages() {
                   to="/booking"
                   className="rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-amber-800 shadow-md hover:bg-amber-50 transition"
                 >
-                  ⚡ Đặt lịch Ưu tiên ngay
+                  ⚡ Đặt lịch Ưu tiên
                 </Link>
+                <button
+                  type="button"
+                  onClick={() => setShowCancelConfirm(true)}
+                  className="rounded-xl border border-white/40 bg-black/20 px-4 py-2.5 text-xs font-bold text-white hover:bg-rose-600 hover:border-rose-600 transition backdrop-blur"
+                >
+                  Hủy gói
+                </button>
               </div>
             </div>
           </div>
@@ -190,12 +216,15 @@ export default function Packages() {
             Bảng Giá Gói Dịch Vụ Định Kỳ
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Mức giá khởi nghiệp siêu tiết kiệm, minh bạch, chỉ từ <strong>25.000 đ/tháng</strong>
+            Mức giá khởi nghiệp siêu tiết kiệm, minh bạch, chỉ từ <strong>41.500 đ/tháng</strong>
           </p>
         </div>
 
         {loading ? (
-          <div className="py-20 text-center text-gray-500">Đang tải danh sách gói dịch vụ...</div>
+          <div className="py-20 text-center text-gray-500 flex items-center justify-center gap-2">
+            <span className="animate-spin text-xl">⏳</span>
+            <span>Đang tải danh sách gói dịch vụ...</span>
+          </div>
         ) : (
           <div className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-3">
             {packages.map((pkg) => {
@@ -207,7 +236,9 @@ export default function Packages() {
                 <div
                   key={pkg.id || pkg.code}
                   className={`relative flex flex-col justify-between rounded-3xl p-7 transition-all duration-300 ${
-                    isPopular
+                    isCurrent
+                      ? 'border-2 border-emerald-500 bg-white shadow-xl shadow-emerald-500/10 ring-4 ring-emerald-500/10'
+                      : isPopular
                       ? 'border-2 border-brand-500 bg-white shadow-xl shadow-brand-500/10 ring-4 ring-brand-500/10 lg:-translate-y-2'
                       : isVip
                       ? 'border-2 border-purple-400 bg-gradient-to-b from-white to-purple-50/40 shadow-lg'
@@ -219,14 +250,16 @@ export default function Packages() {
                     <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
                       <span
                         className={`rounded-full px-3.5 py-1 text-xs font-black shadow-sm ${
-                          isPopular
+                          isCurrent
+                            ? 'bg-emerald-600 text-white'
+                            : isPopular
                             ? 'bg-brand-600 text-white'
                             : isVip
                             ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white'
                             : 'bg-emerald-600 text-white'
                         }`}
                       >
-                        {pkg.badge}
+                        {isCurrent ? '✓ Gói đang sở hữu' : pkg.badge}
                       </span>
                     </div>
                   )}
@@ -267,18 +300,27 @@ export default function Packages() {
                     </ul>
                   </div>
 
-                  {/* NÚT ĐĂNG KÝ */}
+                  {/* NÚT CHỌN GÓI & THANH TOÁN */}
                   <div className="mt-8 pt-4">
                     {isCurrent ? (
-                      <button
-                        disabled
-                        className="w-full rounded-xl bg-gray-100 py-3 text-sm font-bold text-gray-500 cursor-not-allowed border border-gray-200"
-                      >
-                        ✓ Gói đang kích hoạt
-                      </button>
+                      <div className="space-y-2">
+                        <button
+                          disabled
+                          className="w-full rounded-xl bg-emerald-50 py-3 text-sm font-bold text-emerald-700 cursor-not-allowed border border-emerald-200"
+                        >
+                          ✓ Gói đang kích hoạt (Hội viên VIP)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowCancelConfirm(true)}
+                          className="w-full py-1 text-xs font-semibold text-gray-400 hover:text-rose-600 transition"
+                        >
+                          Hủy gói dịch vụ này
+                        </button>
+                      </div>
                     ) : (
                       <button
-                        onClick={() => handleOpenSubscribe(pkg)}
+                        onClick={() => handleSelectPackage(pkg)}
                         className={`w-full rounded-xl py-3 text-sm font-bold transition shadow-sm ${
                           isPopular
                             ? 'bg-brand-600 text-white hover:bg-brand-700 shadow-brand-600/30'
@@ -287,7 +329,7 @@ export default function Packages() {
                             : 'bg-gray-900 text-white hover:bg-gray-800'
                         }`}
                       >
-                        Đăng ký gói này →
+                        Chọn gói & Thanh toán →
                       </button>
                     )}
                   </div>
@@ -298,95 +340,47 @@ export default function Packages() {
         )}
       </section>
 
-      {/* MODAL XÁC NHẬN MUA GÓI */}
-      {selectedPkg && (
+      {/* MODAL XÁC NHẬN HỦY GÓI DỊCH VỤ */}
+      {showCancelConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-              <h3 className="text-lg font-bold text-gray-900">Xác nhận đăng ký gói dịch vụ</h3>
-              <button
-                onClick={() => setSelectedPkg(null)}
-                className="text-gray-400 hover:text-gray-600 text-xl font-bold"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="mt-4">
-              <div className="rounded-xl bg-brand-50 p-4 border border-brand-100">
-                <div className="text-xs font-semibold text-brand-700">Gói bạn chọn:</div>
-                <div className="text-base font-extrabold text-brand-900">{selectedPkg.name}</div>
-                <div className="mt-2 text-2xl font-black text-brand-700">
-                  {formatPrice(selectedPkg.price)}
-                </div>
-                <div className="text-xs text-brand-600 mt-0.5">
-                  Thời hạn: {selectedPkg.duration_months} tháng • {selectedPkg.maintenance_quota} lần bảo dưỡng miễn phí
-                </div>
-              </div>
-
-              <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-3.5 text-xs text-gray-600 space-y-1">
-                <div>⚡ <strong>Đơn luôn được nhận sớm:</strong> Tự động gắn cờ Ưu tiên VIP cho toàn bộ đơn đặt trong {selectedPkg.duration_months} tháng tới.</div>
-                <div>🛡️ <strong>Bảo hành chính hãng:</strong> Thời hạn bảo hành công việc mở rộng lên đến <strong>{selectedPkg.warranty_days} ngày</strong>.</div>
-                <div>🎁 <strong>Ưu đãi:</strong> Giảm {selectedPkg.discount_percentage}% tiền công cho mọi ca sửa chữa phát sinh.</div>
-              </div>
-
-              {errorMsg && (
-                <div className="mt-3 rounded-lg bg-rose-50 p-3 text-xs text-rose-700 border border-rose-200">
-                  {errorMsg}
-                </div>
-              )}
-
-              <div className="mt-6 flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setSelectedPkg(null)}
-                  disabled={submitting}
-                  className="flex-1 rounded-xl border border-gray-300 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-                >
-                  Để sau
-                </button>
-                <button
-                  type="button"
-                  onClick={handleConfirmSubscribe}
-                  disabled={submitting}
-                  className="flex-1 rounded-xl bg-brand-600 py-2.5 text-sm font-bold text-white hover:bg-brand-700 shadow-md shadow-brand-600/30"
-                >
-                  {submitting ? 'Đang kích hoạt...' : 'Kích hoạt ngay ⚡'}
-                </button>
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-gray-100">
+            <div className="flex items-center gap-3 text-rose-600">
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-100 text-2xl">
+                ⚠️
+              </span>
+              <div>
+                <h3 className="text-base font-extrabold text-gray-900">Xác nhận hủy gói dịch vụ</h3>
+                <p className="text-xs text-gray-500">Thao tác này sẽ chấm dứt quyền lợi VIP của bạn.</p>
               </div>
             </div>
-          </div>
-        </div>
-      )}
 
-      {/* MODAL THÀNH CÔNG */}
-      {successModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 text-center shadow-2xl">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-3xl">
-              🎉
+            <div className="mt-4 rounded-xl bg-rose-50/80 p-3.5 border border-rose-100 text-xs text-rose-900 space-y-1.5">
+              <p>
+                Bạn đang yêu cầu hủy gói <strong>{activeSub?.package_name}</strong>.
+              </p>
+              <ul className="list-disc pl-4 space-y-1 text-rose-800">
+                <li>Các đơn đặt lịch sau này sẽ không còn được tự động gắn cờ Ưu tiên VIP.</li>
+                <li>Toàn bộ {activeSub?.remaining_quota || 0} lượt bảo dưỡng miễn phí còn lại sẽ bị vô hiệu hóa.</li>
+                <li>Thời hạn bảo hành dịch vụ trở về mức tiêu chuẩn.</li>
+              </ul>
             </div>
-            <h3 className="mt-4 text-xl font-black text-gray-900">
-              Chúc mừng bạn đã nâng cấp VIP!
-            </h3>
-            <p className="mt-2 text-xs text-gray-600">
-              Bạn đã đăng ký thành công <strong>{successModal.packageName}</strong>. Toàn bộ đơn đặt lịch của bạn từ bây giờ sẽ được thợ nhận việc sớm nhất và hưởng trọn vẹn đặc quyền bảo hành HomeFix.
-            </p>
 
-            <div className="mt-6 flex flex-col gap-2">
-              <Link
-                to="/booking"
-                onClick={() => setSuccessModal(null)}
-                className="w-full rounded-xl bg-brand-600 py-3 text-sm font-bold text-white shadow-md hover:bg-brand-700 transition"
-              >
-                ⚡ Trải nghiệm Đặt lịch Ưu tiên ngay
-              </Link>
+            <div className="mt-6 flex gap-3">
               <button
                 type="button"
-                onClick={() => setSuccessModal(null)}
-                className="w-full rounded-xl border border-gray-200 py-2.5 text-xs font-semibold text-gray-600 hover:bg-gray-50"
+                onClick={() => setShowCancelConfirm(false)}
+                disabled={cancelling}
+                className="flex-1 rounded-xl border border-gray-300 py-2.5 text-xs font-bold text-gray-700 hover:bg-gray-50"
               >
-                Đóng
+                Giữ lại gói VIP
+              </button>
+              <button
+                type="button"
+                onClick={handleCancelSub}
+                disabled={cancelling}
+                className="flex-1 rounded-xl bg-rose-600 py-2.5 text-xs font-bold text-white hover:bg-rose-700 shadow-md shadow-rose-600/30"
+              >
+                {cancelling ? 'Đang hủy...' : 'Đồng ý hủy gói'}
               </button>
             </div>
           </div>

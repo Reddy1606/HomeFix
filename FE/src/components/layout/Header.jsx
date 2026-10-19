@@ -171,19 +171,23 @@ export default function Header() {
                   <img
                     src={user.avatar_url}
                     alt={user.full_name}
-                    className="h-8 w-8 rounded-full object-cover ring-1 ring-gray-200"
+                    className={`h-8 w-8 rounded-full object-cover ring-2 ${
+                      user.is_vip ? 'ring-amber-400 shadow-sm' : 'ring-gray-200'
+                    }`}
                   />
                 ) : (
                   <div
-                    className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-black text-white shadow-xs ${
+                    className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-black shadow-xs ${
                       user.role === 'admin'
-                        ? 'bg-gradient-to-br from-rose-500 to-pink-600'
+                        ? 'bg-gradient-to-br from-rose-500 to-pink-600 text-white'
                         : user.role === 'technician'
-                        ? 'bg-gradient-to-br from-amber-500 to-orange-600'
-                        : 'bg-gradient-to-br from-brand-500 to-blue-600'
+                        ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-white'
+                        : user.is_vip
+                        ? 'bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-600 text-amber-950 ring-2 ring-amber-300'
+                        : 'bg-gradient-to-br from-brand-500 to-blue-600 text-white'
                     }`}
                   >
-                    {firstLetter}
+                    {user.is_vip && user.role === 'customer' ? '👑' : firstLetter}
                   </div>
                 )}
 
@@ -201,6 +205,8 @@ export default function Header() {
                           ? user.is_verified
                             ? 'bg-emerald-100 text-emerald-800'
                             : 'bg-amber-100 text-amber-800'
+                          : user.is_vip
+                          ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-amber-950 shadow-xs'
                           : 'bg-blue-100 text-blue-800'
                       }`}
                     >
@@ -210,6 +216,8 @@ export default function Header() {
                         ? user.is_verified
                           ? 'Thợ xác minh'
                           : 'Thợ (Chờ KYC)'
+                        : user.is_vip
+                        ? '👑 VIP Member'
                         : 'Khách hàng'}
                     </span>
                   </div>
@@ -270,6 +278,18 @@ export default function Header() {
                             ⚠️ Cần bổ sung CCCD →
                           </Link>
                         )}
+                      </div>
+                    )}
+
+                    {/* Trạng thái VIP cho Khách hàng */}
+                    {user.role === 'customer' && user.is_vip && (
+                      <div className="mt-2.5 pt-2 border-t border-amber-200/60 flex items-center justify-between text-xs">
+                        <span className="font-extrabold text-amber-900 flex items-center gap-1">
+                          👑 {user.subscription?.package_name || 'Hội viên VIP'}
+                        </span>
+                        <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-black text-amber-800">
+                          {user.subscription?.remaining_quota ?? 0} lượt bảo dưỡng
+                        </span>
                       </div>
                     )}
                   </div>

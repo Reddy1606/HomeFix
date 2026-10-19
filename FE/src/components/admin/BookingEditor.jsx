@@ -8,6 +8,7 @@ import { loadTechnicians } from '../../api/adminData';
 import Modal from './Modal';
 import { ResourceState, StatusBadge } from './AdminUI';
 import TechnicianPicker from './TechnicianPicker';
+import { formatBookingCode } from '../../utils/bookingCode';
 
 const load = ({ id }, options) => fetchAdminBookingById(id, options);
 export default function BookingEditor({ id, onClose, onSaved }) {
@@ -47,7 +48,9 @@ export default function BookingEditor({ id, onClose, onSaved }) {
     <Modal title="Chi tiết & điều phối đơn hàng" busy={busy} onClose={onClose}>
       <ResourceState {...resource} reload={reload} />
       {booking && <>
-        <p className="hf-muted break-word">Mã đơn: {booking.id}</p>
+        <p className="hf-muted break-word" style={{ fontSize: '0.88rem' }}>
+          Mã đơn: <strong style={{ color: '#0f172a' }}>{formatBookingCode(booking)}</strong> <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>({booking.id})</span>
+        </p>
         <StatusBadge status={booking.status} />
         <dl className="booking-details">
           <dt>Khách hàng</dt><dd>{booking.customer?.full_name || booking.contact_name || 'Chưa có'}</dd>

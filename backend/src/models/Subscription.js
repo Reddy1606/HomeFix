@@ -127,6 +127,45 @@ class Subscription {
   }
 
   /**
+   * Hủy gói thuê bao đang hoạt động của khách hàng
+   */
+  static async cancel(userId) {
+    if (!userId) return null;
+
+    try {
+      const { data, error } = await supabase
+        .from('user_subscriptions')
+        .update({
+          status: 'cancelled',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', userId)
+        .eq('status', 'active')
+        .select();
+
+      if (!error && Array.isArray(data) && data.length > 0) {
+        return data[0];
+      }
+    } catch (e) {
+      // fallback
+    }
+
+    const localList = readLocalSubscriptions();
+    let updated = null;
+    localList.forEach((s) => {
+      if (s.user_id === userId && s.status === 'active') {
+        s.status = 'cancelled';
+        s.updated_at = new Date().toISOString();
+        updated = s;
+      }
+    });
+    if (updated) {
+      writeLocalSubscriptions(localList);
+    }
+    return updated;
+  }
+
+  /**
    * Trừ 1 lần bảo dưỡng định kỳ
    */
   static async useQuota(subscriptionId) {

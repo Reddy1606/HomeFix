@@ -5,6 +5,7 @@ import BookingReview from '../../components/common/BookingReview';
 import { submitBookingReview } from '../../api/reviews';
 import { fetchBookingById, cancelBooking } from '../../api/bookings';
 import { formatPrice } from '../../api/services';
+import { formatBookingCode } from '../../utils/bookingCode';
 
 const STATUS_STEPS = [
   { key: 'pending', label: '1. Tiếp nhận đơn' },
@@ -174,7 +175,7 @@ const handleSubmitReview = async ({ bookingId, rating, comment }) => {
           <div>
             <span className="text-xs font-mono font-medium text-gray-400">Mã đơn hàng</span>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-0.5">
-              #{String(booking.id).slice(0, 8)}
+              {formatBookingCode(booking)}
             </h1>
             <p className="mt-1 text-xs text-gray-500">
               Thời điểm tạo: {formatDate(booking.created_at || booking.createdAt)}

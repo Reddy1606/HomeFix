@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/auth';
 import { fetchMyBookings, cancelBooking } from '../../api/bookings';
 import { formatPrice } from '../../api/services';
+import { formatBookingCode } from '../../utils/bookingCode';
 
 const STATUS_MAP = {
   pending: { label: 'Chờ xác nhận', color: 'bg-amber-100 text-amber-800 border-amber-200' },
@@ -183,8 +184,8 @@ export default function BookingHistory() {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-xs font-mono font-medium text-gray-400">
-                        #{item.id ? String(item.id).slice(0, 8) : 'HD'}
+                      <span className="text-xs font-mono font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                        {formatBookingCode(item)}
                       </span>
                       <h2 className="text-lg font-bold text-gray-900">{serviceName}</h2>
                       {(item.is_priority || item.description?.includes('ƯU TIÊN VIP')) && (

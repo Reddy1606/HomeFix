@@ -21,6 +21,7 @@ import AdminServices from './pages/admin/Services';
 import AdminUsers from './pages/admin/Users';
 import AdminPackages from './pages/admin/Packages';
 import Packages from './pages/Packages';
+import PackageCheckout from './pages/PackageCheckout';
 import './styles/account.css';
 import './styles/analytics.css';
 
@@ -34,6 +35,7 @@ export default function App() {
             <Route path="/services" element={<Services />} />
             <Route path="/services/:id" element={<ServiceDetail />} />
             <Route path="/packages" element={<Packages />} />
+            <Route path="/packages/checkout" element={<PackageCheckout />} />
 
             {/* FE2 sẽ thay route đặt lịch bằng màn hình của nhóm. */}
             <Route path="/booking" element={<BookingPage />} />

@@ -247,7 +247,7 @@ export default function BookingPage() {
             to="/packages"
             className="font-bold text-brand-600 hover:text-brand-800 underline flex items-center gap-1"
           >
-            Xem gói HomeCare từ 25k/tháng →
+            Xem gói HomeCare từ 41.5k/tháng →
           </Link>
         </div>
       )}

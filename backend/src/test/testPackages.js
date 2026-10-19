@@ -169,6 +169,12 @@ async function runTests() {
     });
     assert(res7.status === 200 && res7.data.data.subscription_stats != null, 'GET /api/admin/dashboard - Dashboard tích hợp thống kê thuê bao subscription');
 
+    // TEST 8: Khách hàng hủy gói dịch vụ
+    const res8 = await request('POST', '/api/packages/cancel', {
+      headers: { Authorization: `Bearer ${customerToken}` },
+    });
+    assert(res8.status === 200 && res8.data.data.subscription.status === 'cancelled', 'POST /api/packages/cancel - Khách hàng hủy gói dịch vụ thành công');
+
   } catch (err) {
     console.error('Lỗi khi chạy test gói dịch vụ:', err);
     failed++;

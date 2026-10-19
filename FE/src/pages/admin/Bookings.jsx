@@ -9,6 +9,7 @@ import {
 } from '../../components/admin/AdminUI';
 import { BOOKING_STATUS, dateLabel, money } from '../../utils/admin';
 import BookingEditor from '../../components/admin/BookingEditor';
+import { formatBookingCode } from '../../utils/bookingCode';
 
 
 export default function Bookings() {
@@ -111,8 +112,8 @@ export default function Bookings() {
                 {rows.map((booking) => (
                   <tr key={booking.id}>
                     <td>
-                      <span className="booking-id" title={booking.id}>
-                        #{String(booking.id).slice(0, 8)}
+                      <span className="booking-id font-bold text-gray-800" title={booking.id}>
+                        {formatBookingCode(booking)}
                       </span>
                       <span className="table-subtitle">
                         {dateLabel(booking.created_at)}
@@ -160,7 +161,7 @@ export default function Bookings() {
                       <button
                         className="hf-table-action"
                         onClick={() => open(booking)}
-                        aria-label={`Xem đơn ${String(booking.id).slice(0, 8)}`}
+                        aria-label={`Xem đơn ${formatBookingCode(booking)}`}
                       >
                         Chi tiết →
                       </button>

@@ -158,7 +158,7 @@ export default function Home() {
                   Đăng Ký Gói HomeCare 1 Năm — Đơn Luôn Nhận Sớm
                 </h2>
                 <p className="mt-3 text-sm text-brand-100 sm:text-base max-w-2xl leading-relaxed">
-                  Không lo thợ trễ hẹn mùa cao điểm. Miễn phí 1 - 4 lần vệ sinh máy lạnh định kỳ, bảo hành chính hãng HomeFix lên đến 90 ngày. <strong>Chỉ từ 25.000 đ/tháng!</strong>
+                  Không lo thợ trễ hẹn mùa cao điểm. Miễn phí vệ sinh máy lạnh, bảo dưỡng định kỳ, bảo hành chính hãng HomeFix lên đến 90 ngày. <strong>Chỉ từ ~41.500 đ/tháng!</strong>
                 </p>
                 <div className="mt-6 flex flex-wrap gap-4 text-xs text-brand-200">
                   <span className="flex items-center gap-1.5 font-semibold">✓ Đơn xếp hàng đợi VIP</span>
@@ -171,7 +171,7 @@ export default function Home() {
                   to="/packages"
                   className="rounded-2xl bg-amber-400 px-6 py-4 text-center text-sm font-extrabold text-amber-950 shadow-lg shadow-amber-400/20 hover:bg-amber-300 transition hover:scale-105"
                 >
-                  Khám phá các gói từ 149k →
+                  Khám phá các gói từ 249k →
                 </Link>
                 <Link
                   to="/booking"

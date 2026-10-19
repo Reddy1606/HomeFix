@@ -1,5 +1,6 @@
 const { validationResult } = require('express-validator');
 const User = require('../models/User');
+const Subscription = require('../models/Subscription');
 const { hashPassword, comparePassword, generateToken } = require('../utils/helpers');
 const emailService = require('../services/emailService');
 const otpService = require('../services/otpService');
@@ -127,11 +128,18 @@ const login = async (req, res, next) => {
 
     // Trả về user info (loại bỏ password_hash)
     const { password_hash, ...userWithoutPassword } = user;
+    let subscription = null;
+    if (user.role === 'customer') {
+      subscription = await Subscription.findActiveByUserId(user.id);
+    }
 
     res.status(200).json({
       success: true,
       message: 'Đăng nhập thành công!',
-      data: { user: userWithoutPassword, token },
+      data: {
+        user: { ...userWithoutPassword, subscription, is_vip: Boolean(subscription) },
+        token,
+      },
     });
   } catch (error) {
     next(error);
@@ -145,9 +153,20 @@ const login = async (req, res, next) => {
  */
 const getMe = async (req, res, next) => {
   try {
+    let subscription = null;
+    if (req.user && req.user.role === 'customer') {
+      subscription = await Subscription.findActiveByUserId(req.user.id);
+    }
+
     res.status(200).json({
       success: true,
-      data: { user: req.user },
+      data: {
+        user: {
+          ...req.user,
+          subscription,
+          is_vip: Boolean(subscription),
+        },
+      },
     });
   } catch (error) {
     next(error);

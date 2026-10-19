@@ -1,4 +1,5 @@
 const { supabase } = require('../config/database');
+const { formatBookingCode } = require('../utils/bookingCode');
 
 // Thông tin dịch vụ đi kèm mỗi booking
 const SERVICE_FIELDS = 'services(name, category, description, base_price, price_unit, warranty_days)';
@@ -36,12 +37,14 @@ class Booking {
         err && (err.code === 'PGRST204' || err.code === '42703' || String(err.message).includes('column') || String(err.message).includes('is_priority'));
 
       if (!error && data) {
-        return {
+        const result = {
           ...data,
           is_priority: bookingData.is_priority || false,
           priority_level: bookingData.priority_level || 0,
           is_warranty_claim: bookingData.is_warranty_claim || false,
         };
+        result.booking_code = formatBookingCode(result);
+        return result;
       }
       if (error && !isMissingColumn(error)) throw error;
     } catch (err) {
@@ -58,12 +61,14 @@ class Booking {
       .single();
 
     if (error) throw error;
-    return {
+    const fallbackResult = {
       ...data,
       is_priority: bookingData.is_priority || false,
       priority_level: bookingData.priority_level || 0,
       is_warranty_claim: bookingData.is_warranty_claim || false,
     };
+    fallbackResult.booking_code = formatBookingCode(fallbackResult);
+    return fallbackResult;
   }
 
   /**
@@ -92,6 +97,7 @@ class Booking {
       data.is_priority = data.is_priority === true || isDescPriority;
       data.priority_level = data.priority_level || (isDescPriority ? 2 : 0);
       data.is_warranty_claim = data.is_warranty_claim === true || isDescWarranty || data.status === 'warranty_claim';
+      data.booking_code = formatBookingCode(data);
     }
 
     return data;
@@ -132,6 +138,7 @@ class Booking {
           b.is_priority = b.is_priority === true || isDescPriority;
           b.priority_level = b.priority_level || (isDescPriority ? 2 : 0);
           b.is_warranty_claim = b.is_warranty_claim === true || isDescWarranty || b.status === 'warranty_claim';
+          b.booking_code = formatBookingCode(b);
         })
       );
     }
@@ -175,12 +182,14 @@ class Booking {
     const enriched = (data || []).map((b) => {
       const isDescPriority = typeof b.description === 'string' && (b.description.includes('ƯU TIÊN') || b.description.includes('VIP'));
       const isDescWarranty = typeof b.description === 'string' && b.description.includes('BẢO HÀNH');
-      return {
+      const item = {
         ...b,
         is_priority: b.is_priority === true || isDescPriority,
         priority_level: b.priority_level || (isDescPriority ? 2 : 0),
         is_warranty_claim: b.is_warranty_claim === true || isDescWarranty || b.status === 'warranty_claim',
       };
+      item.booking_code = formatBookingCode(item);
+      return item;
     });
 
     // Sắp xếp đơn VIP ưu tiên lên trước
@@ -218,6 +227,9 @@ class Booking {
 
     if (error && error.code === 'PGRST116') return null;
     if (error) throw error;
+    if (data) {
+      data.booking_code = formatBookingCode(data);
+    }
     return data;
   }
 

@@ -10,20 +10,20 @@ const DEFAULT_PACKAGES = [
     id: 'pkg-basic-001',
     code: 'basic_6m',
     name: 'Gói Chăm Sóc Cơ Bản (HomeCare Basic)',
-    description: 'Chỉ 25k/tháng! Phù hợp cho sinh viên, người độc thân hoặc căn hộ nhỏ cần bảo dưỡng thiết bị cơ bản định kỳ.',
-    price: 149000, // Điều chỉnh từ 399.000đ -> 149.000đ (tiết kiệm, dễ chốt đơn)
+    description: 'Chỉ ~41.500đ/tháng. Số tiền trả trước nhỏ, phù hợp để khách hàng trải nghiệm dịch vụ. Lấy vệ sinh 1 máy lạnh tiêu chuẩn làm quyền lợi cốt lõi.',
+    price: 249000,
     duration_months: 6,
     maintenance_quota: 1,
     warranty_days: 30,
     priority_level: 1,
     discount_percentage: 5,
-    badge: 'Tiết kiệm sinh viên',
+    badge: 'Trải nghiệm tiết kiệm',
     features: [
-      '1 lần vệ sinh/bảo dưỡng máy lạnh hoặc quạt điện miễn phí',
-      'Bảo hành công việc 30 ngày (HomeFix bảo chứng)',
+      '1 lượt vệ sinh máy lạnh tiêu chuẩn (hoặc thiết bị tiêu chuẩn) miễn phí',
+      'Bảo hành chất lượng công việc 30 ngày (HomeFix bảo chứng)',
       'Ưu tiên nhận đơn trước các khách hàng thông thường',
-      'Giảm 5% giá nhân công cho các dịch vụ sửa chữa phát sinh',
-      'Tư vấn kỹ thuật trực tuyến 24/7'
+      'Giảm 5% tiền công cho các dịch vụ sửa chữa phát sinh',
+      'Hỗ trợ tư vấn kỹ thuật trực tuyến 24/7'
     ],
     is_active: true,
     created_at: new Date().toISOString(),
@@ -32,8 +32,8 @@ const DEFAULT_PACKAGES = [
     id: 'pkg-standard-002',
     code: 'standard_1y',
     name: 'Gói Chăm Sóc Toàn Diện 1 Năm (HomeCare Standard)',
-    description: 'Lựa chọn phổ biến nhất cho gia đình từ 3-5 người. Đảm bảo toàn bộ thiết bị điện lạnh, điện nước hoạt động êm ái cả năm.',
-    price: 299000, // Điều chỉnh từ 799.000đ -> 299.000đ (chỉ ~25k/tháng, gồm 2 lần bảo dưỡng)
+    description: 'Chỉ ~45.750đ/tháng. Dành cho khách hàng cần 2 lượt bảo dưỡng trong năm, bảo hành dài hạn 60 ngày và kiểm tra tại nhà có giới hạn.',
+    price: 549000,
     duration_months: 12,
     maintenance_quota: 2,
     warranty_days: 60,
@@ -41,11 +41,11 @@ const DEFAULT_PACKAGES = [
     discount_percentage: 10,
     badge: 'Phổ biến nhất ⭐',
     features: [
-      '2 lần bảo dưỡng điều hòa / thiết bị gia dụng miễn phí trong 1 năm',
-      'Bảo hành dịch vụ lên đến 60 ngày - Thợ xử lý miễn phí nếu tái phát',
+      '2 lượt bảo dưỡng/vệ sinh thiết bị tiêu chuẩn miễn phí trong 1 năm',
+      'Bảo hành dịch vụ mở rộng lên đến 60 ngày (Thợ xử lý miễn phí nếu tái phát)',
       '⚡ Cam kết thợ nhận đơn trong vòng 15-30 phút (Hàng đợi ưu tiên)',
-      'Giảm 10% chi phí nhân công toàn bộ dịch vụ phát sinh',
-      'Miễn phí kiểm tra & chẩn đoán sự cố tại nhà (Call-out fee)'
+      'Giảm 10% chi phí tiền công cho toàn bộ dịch vụ phát sinh',
+      'Miễn phí kiểm tra & chẩn đoán sự cố tại nhà có giới hạn'
     ],
     is_active: true,
     created_at: new Date().toISOString(),
@@ -54,8 +54,8 @@ const DEFAULT_PACKAGES = [
     id: 'pkg-vip-003',
     code: 'vip_1y',
     name: 'Gói VIP Thượng Hạng 1 Năm (HomeCare VIP Platinum)',
-    description: 'Đặc quyền trọn gói cao cấp cho cả gia đình. Đội ngũ thợ lành nghề hàng đầu (4.8★ - 5★) phục vụ tức thì.',
-    price: 599000, // Điều chỉnh từ 1.499.000đ -> 599.000đ (chỉ ~50k/tháng cho trọn gói gia đình)
+    description: 'Chỉ ~99.917đ/tháng. Đầy đủ ngân sách chăm sóc toàn diện thiết bị gia đình: 2 máy lạnh, 1 máy giặt và 1 kiểm tra điện nước tổng.',
+    price: 1199000,
     duration_months: 12,
     maintenance_quota: 4,
     warranty_days: 90,
@@ -63,11 +63,11 @@ const DEFAULT_PACKAGES = [
     discount_percentage: 15,
     badge: 'Đặc quyền VIP 👑',
     features: [
-      '4 lần bảo dưỡng định kỳ trọn gói (2 máy lạnh + 1 máy giặt + 1 kiểm tra điện nước tổng)',
-      'Bảo hành vàng 90 ngày (Miễn phí 100% công sửa nếu tái phát sự cố)',
-      '⚡ HỎA TỐC VIP: Thợ Top Rating (4.8★ - 5.0★) tiếp nhận ngay trong 5-10 phút',
+      'Trọn gói 4 lượt: 2 lượt máy lạnh + 1 lượt máy giặt + 1 lượt kiểm tra điện nước tổng',
+      'Bảo hành vàng 90 ngày (HomeFix bảo chứng 100% công sửa nếu tái phát)',
+      '⚡ HỎA TỐC VIP: Thợ Top Rating (4.8★ - 5★) tiếp nhận ngay trong 5-10 phút',
       'Ưu tiên tuyệt đối vào giờ cao điểm, mưa bão, ngày lễ Tết',
-      'Giảm 15% tổng hóa đơn nhân công sửa chữa',
+      'Giảm 15% tổng hóa đơn tiền công sửa chữa phát sinh',
       'Đường dây nóng hỗ trợ ưu tiên trực tiếp cùng Quản trị viên'
     ],
     is_active: true,

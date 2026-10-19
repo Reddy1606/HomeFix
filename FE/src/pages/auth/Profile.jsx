@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/auth';
+import { useToast } from '../../context/ToastContext';
 import { becomeTechnician, changePassword, updateProfile } from '../../api/auth';
+import { cancelSubscription } from '../../api/packages';
 import { uploadAvatar, uploadKYC } from '../../api/upload';
 import FormField from '../../components/auth/FormField';
 import {
@@ -20,6 +22,7 @@ const roles = {
 
 export default function Profile() {
   const { user, setUser, logout } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
   const [tab, setTab] = useState('profile'); // 'profile' | 'password' | 'kyc'
   const fileInputRef = useRef(null);
@@ -74,6 +77,28 @@ export default function Profile() {
       setTab('kyc');
     } catch (err) {
       setNotice({ type: 'error', text: apiError(err) });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // Hủy gói dịch vụ VIP
+  const handleCancelSubscription = async () => {
+    if (!window.confirm('Bạn có chắc chắn muốn hủy gói dịch vụ VIP? Toàn bộ lượt bảo dưỡng và đặc quyền ưu tiên sẽ không còn hiệu lực.')) return;
+    setBusy(true);
+    setNotice(null);
+    try {
+      await cancelSubscription();
+      setUser((prev) => ({
+        ...prev,
+        is_vip: false,
+        subscription: null,
+      }));
+      setNotice({ type: 'success', text: 'Đã hủy gói dịch vụ thành công.' });
+      showToast('Đã hủy gói dịch vụ thành công.', 'success');
+    } catch (err) {
+      setNotice({ type: 'error', text: apiError(err) });
+      showToast(apiError(err), 'error');
     } finally {
       setBusy(false);
     }
@@ -360,8 +385,13 @@ export default function Profile() {
 
             <h2 style={{ textAlign: 'center' }}>{user.full_name}</h2>
             <p className="hf-muted break-word" style={{ textAlign: 'center' }}>{user.email}</p>
-            <div style={{ textAlign: 'center', margin: '6px 0 16px' }}>
+            <div style={{ textAlign: 'center', margin: '6px 0 16px', display: 'flex', justifyContent: 'center', gap: '6px', flexWrap: 'wrap' }}>
               <span className="hf-badge">{roles[user.role] || 'Thành viên'}</span>
+              {user.is_vip && (
+                <span className="hf-badge" style={{ background: '#fef3c7', color: '#92400e', borderColor: '#fde68a', fontWeight: 800 }}>
+                  👑 VIP Member
+                </span>
+              )}
             </div>
 
             <nav aria-label="Tài khoản">
@@ -431,6 +461,80 @@ export default function Profile() {
                 ? 'Sử dụng mật khẩu mạnh để bảo vệ tài khoản.'
                 : 'Tải lên CCCD và chứng chỉ nghề để được cấp quyền nhận đơn sửa chữa.'}
             </p>
+
+            {/* THẺ HỘI VIÊN VIP NẾU ĐÃ KÍCH HOẠT */}
+            {user.role === 'customer' && user.is_vip && user.subscription && tab === 'profile' && (
+              <div style={{
+                margin: '16px 0 20px',
+                padding: '20px 24px',
+                borderRadius: '16px',
+                background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%)',
+                color: '#fff',
+                border: '1px solid #fbbf24',
+                boxShadow: '0 10px 25px -5px rgba(251, 191, 36, 0.25)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '16px'
+              }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '1.4rem' }}>👑</span>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#fde047' }}>
+                      HOMEFIX VIP GOLD MEMBER
+                    </span>
+                    <span style={{ background: '#22c55e', color: '#fff', fontSize: '0.7rem', padding: '2px 8px', borderRadius: '999px', fontWeight: 700 }}>
+                      ACTIVE
+                    </span>
+                  </div>
+                  <h3 style={{ margin: '8px 0 4px', fontSize: '1.25rem', fontWeight: 900, color: '#fff' }}>
+                    {user.subscription.package_name}
+                  </h3>
+                  <p style={{ margin: 0, fontSize: '0.82rem', color: '#cbd5e1' }}>
+                    Thời hạn: đến <strong>{new Date(user.subscription.end_date).toLocaleDateString('vi-VN')}</strong> • Bảo hành công việc: <strong>{user.subscription.warranty_days} ngày</strong>
+                  </p>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                  <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.12)', padding: '8px 14px', borderRadius: '10px', backdropFilter: 'blur(4px)' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#fde047' }}>Bảo dưỡng miễn phí</div>
+                    <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#fff' }}>{user.subscription.remaining_quota} lần</div>
+                  </div>
+                  <Link
+                    to="/booking"
+                    style={{
+                      background: '#f59e0b',
+                      color: '#78350f',
+                      padding: '10px 18px',
+                      borderRadius: '10px',
+                      fontWeight: 800,
+                      fontSize: '0.85rem',
+                      textDecoration: 'none',
+                      boxShadow: '0 4px 12px rgba(245, 158, 11, 0.4)'
+                    }}
+                  >
+                    ⚡ Đặt lịch Ưu tiên
+                  </Link>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={handleCancelSubscription}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      color: '#fca5a5',
+                      border: '1px solid rgba(252, 165, 165, 0.3)',
+                      padding: '9px 14px',
+                      borderRadius: '10px',
+                      fontWeight: 700,
+                      fontSize: '0.8rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Hủy gói VIP
+                  </button>
+                </div>
+              </div>
+            )}
 
             {user.role === 'customer' && tab === 'profile' && (
               <div style={{ margin: '16px 0 24px', padding: '16px 18px', borderRadius: '12px', background: '#fffbeb', border: '1px solid #fde68a', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
