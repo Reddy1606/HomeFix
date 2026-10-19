@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/auth';
 import { becomeTechnician, changePassword, updateProfile } from '../../api/auth';
 import { uploadAvatar, uploadKYC } from '../../api/upload';
@@ -20,6 +20,7 @@ const roles = {
 
 export default function Profile() {
   const { user, setUser, logout } = useAuth();
+  const navigate = useNavigate();
   const [tab, setTab] = useState('profile'); // 'profile' | 'password' | 'kyc'
   const fileInputRef = useRef(null);
 
@@ -403,7 +404,13 @@ export default function Profile() {
               {user.role === 'admin' && (
                 <Link to="/admin">Trang quản trị →</Link>
               )}
-              <button disabled={busy} onClick={logout}>
+              <button
+                disabled={busy}
+                onClick={() => {
+                  logout();
+                  navigate('/');
+                }}
+              >
                 Đăng xuất
               </button>
             </nav>

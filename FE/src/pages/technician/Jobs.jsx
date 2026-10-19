@@ -342,22 +342,42 @@ export default function TechnicianJobs() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(330px, 1fr))', gap: '18px' }}>
               {availableJobs.map((job) => {
                 const isImmediate = job.booking_type === 'immediate';
+                const isPriority = job.is_priority || (typeof job.description === 'string' && job.description.includes('ƯU TIÊN VIP'));
+                const isWarranty = job.is_warranty_claim || (typeof job.description === 'string' && job.description.includes('BẢO HÀNH'));
+
                 return (
                   <div
                     key={job.id}
                     style={{
-                      background: '#ffffff',
+                      background: isPriority ? '#fffdf5' : '#ffffff',
                       borderRadius: '16px',
-                      border: '1.5px solid #e2e8f0',
+                      border: isPriority ? '2px solid #f59e0b' : '1.5px solid #e2e8f0',
                       padding: '20px',
-                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+                      boxShadow: isPriority ? '0 10px 20px -3px rgba(245, 158, 11, 0.2)' : '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
                       display: 'flex',
                       flexDirection: 'column',
                       justifyContent: 'space-between',
                       transition: 'all 0.2s ease',
+                      position: 'relative',
                     }}
                   >
                     <div>
+                      {/* Huy hiệu VIP nếu là khách mua gói năm */}
+                      {isPriority && (
+                        <div style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#ffffff', padding: '5px 12px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 800, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 2px 4px rgba(217, 119, 6, 0.25)' }}>
+                          <span>👑</span>
+                          <span>ĐƠN ƯU TIÊN VIP (Khách gói năm - Nhận ngay)</span>
+                        </div>
+                      )}
+
+                      {/* Huy hiệu Bảo hành nếu là yêu cầu bảo hành */}
+                      {isWarranty && (
+                        <div style={{ background: '#ffe4e6', color: '#be123c', padding: '4px 10px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 800, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px', border: '1px solid #fecdd3' }}>
+                          <span>🛡️</span>
+                          <span>ĐƠN BẢO HÀNH CHÍNH HÃNG HOMEFIX</span>
+                        </div>
+                      )}
+
                       {/* Badge loại đơn: Cần gấp vs Hẹn trước */}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                         {isImmediate ? (

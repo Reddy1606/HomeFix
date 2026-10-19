@@ -1,7 +1,7 @@
 import { Link, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/auth';
 
-export default function ProtectedRoute({ adminOnly = false }) {
+export default function ProtectedRoute({ adminOnly = false, allowedRoles = null }) {
   const { user, loading, sessionError, restoreSession, logout } = useAuth();
   const location = useLocation();
   if (loading)
@@ -35,5 +35,14 @@ export default function ProtectedRoute({ adminOnly = false }) {
         </Link>
       </section>
     );
+
+  // Kiểm tra vai trò được phép truy cập
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    if (user.role === 'admin') return <Navigate to="/admin" replace />;
+    if (user.role === 'technician') return <Navigate to="/technician/jobs" replace />;
+    return <Navigate to="/" replace />;
+  }
+
   return <Outlet />;
 }
+

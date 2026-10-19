@@ -188,6 +188,17 @@ const handleSubmitReview = async ({ bookingId, rating, comment }) => {
           </span>
         </div>
 
+        {(booking.is_priority || (typeof booking.description === 'string' && booking.description.includes('ƯU TIÊN VIP'))) && (
+          <div className="mt-4 rounded-xl border border-amber-300 bg-gradient-to-r from-amber-50 to-yellow-50 p-3.5 text-xs text-amber-950 flex items-center gap-2.5">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500 text-white font-bold text-sm shrink-0">
+              ⚡
+            </span>
+            <span>
+              <strong>Đơn Hàng Ưu Tiên VIP:</strong> Đơn này được hệ thống xếp hàng đợi ưu tiên cao nhất để thợ nhanh chóng tiếp nhận và cam kết bảo hành chính hãng HomeFix.
+            </span>
+          </div>
+        )}
+
         {/* Tiến trình sửa chữa (Timeline) */}
         {booking.status !== 'cancelled' && (
           <div className="my-8">

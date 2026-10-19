@@ -6,11 +6,12 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
-    "test": "node src/test/testAuth.js && node src/test/testBackend2.js && node src/test/testUpload.js && node src/test/testForgotPassword.js",
+    "test": "node src/test/testAuth.js && node src/test/testBackend2.js && node src/test/testUpload.js && node src/test/testForgotPassword.js && node src/test/testPackages.js",
     "test:auth": "node src/test/testAuth.js",
     "test:be2": "node src/test/testBackend2.js",
     "test:upload": "node src/test/testUpload.js",
     "test:otp": "node src/test/testForgotPassword.js",
+    "test:packages": "node src/test/testPackages.js",
     "seed": "node src/database/seed.js",
     "clean:mock": "node scripts/cleanup-mock-data.js",
     "posttest": "node scripts/cleanup-mock-data.js"

@@ -73,10 +73,16 @@ export default function Home() {
                 Đặt thợ ngay
               </Link>
               <Link
-                to="/services"
-                className="rounded-full bg-white/10 px-7 py-3.5 text-sm font-bold text-white ring-1 ring-white/30 backdrop-blur transition hover:bg-white/20"
+                to="/packages"
+                className="rounded-full bg-amber-400 text-amber-950 px-6 py-3.5 text-sm font-extrabold shadow-lg shadow-amber-400/30 transition hover:scale-105 hover:bg-amber-300"
               >
-                Xem bảng giá
+                ⚡ Gói bảo dưỡng cả năm (Từ 25k)
+              </Link>
+              <Link
+                to="/services"
+                className="rounded-full bg-white/10 px-6 py-3.5 text-sm font-bold text-white ring-1 ring-white/30 backdrop-blur transition hover:bg-white/20"
+              >
+                Bảng giá lẻ
               </Link>
             </div>
           </div>
@@ -134,6 +140,47 @@ export default function Home() {
                 <span className="text-xs font-semibold sm:text-sm">{badge.label}</span>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* BANNER PROMO GÓI DỊCH VỤ HOMECARE */}
+      <section className="bg-white py-12 border-b border-gray-100">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-900 via-brand-800 to-indigo-900 p-8 sm:p-12 text-white shadow-xl">
+            <div className="absolute right-0 top-0 -mt-10 -mr-10 h-72 w-72 rounded-full bg-brand-500/20 blur-3xl pointer-events-none" />
+            <div className="relative grid grid-cols-1 items-center gap-8 lg:grid-cols-12">
+              <div className="lg:col-span-8">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-400/20 px-3.5 py-1 text-xs font-bold text-amber-300 border border-amber-400/30">
+                  ⚡ GIẢI PHÁP TIẾT KIỆM CHO GIA ĐÌNH & SINH VIÊN
+                </span>
+                <h2 className="mt-4 text-2xl sm:text-4xl font-black tracking-tight text-white">
+                  Đăng Ký Gói HomeCare 1 Năm — Đơn Luôn Nhận Sớm
+                </h2>
+                <p className="mt-3 text-sm text-brand-100 sm:text-base max-w-2xl leading-relaxed">
+                  Không lo thợ trễ hẹn mùa cao điểm. Miễn phí 1 - 4 lần vệ sinh máy lạnh định kỳ, bảo hành chính hãng HomeFix lên đến 90 ngày. <strong>Chỉ từ 25.000 đ/tháng!</strong>
+                </p>
+                <div className="mt-6 flex flex-wrap gap-4 text-xs text-brand-200">
+                  <span className="flex items-center gap-1.5 font-semibold">✓ Đơn xếp hàng đợi VIP</span>
+                  <span className="flex items-center gap-1.5 font-semibold">✓ Bảo dưỡng miễn phí</span>
+                  <span className="flex items-center gap-1.5 font-semibold">✓ Giảm đến 15% tiền công</span>
+                </div>
+              </div>
+              <div className="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col gap-3 justify-center">
+                <Link
+                  to="/packages"
+                  className="rounded-2xl bg-amber-400 px-6 py-4 text-center text-sm font-extrabold text-amber-950 shadow-lg shadow-amber-400/20 hover:bg-amber-300 transition hover:scale-105"
+                >
+                  Khám phá các gói từ 149k →
+                </Link>
+                <Link
+                  to="/booking"
+                  className="rounded-2xl bg-white/10 px-6 py-4 text-center text-sm font-bold text-white hover:bg-white/20 ring-1 ring-white/20 transition"
+                >
+                  Đặt thợ đơn lẻ
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>

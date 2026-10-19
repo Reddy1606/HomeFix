@@ -1,17 +1,24 @@
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/auth';
 
 const links = [
   { to: '/admin', label: 'Tổng quan', icon: '◫' },
   { to: '/admin/bookings', label: 'Quản lý đơn hàng', icon: '▤' },
+  { to: '/admin/packages', label: 'Gói dịch vụ (MRR)', icon: '👑' },
   { to: '/admin/services', label: 'Quản lý dịch vụ', icon: '◇' },
   { to: '/admin/users', label: 'Quản lý tài khoản', icon: '👤' },
 ];
 
 export default function AdminLayout() {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const location = useLocation();
   const current = links.find((item) => item.to === location.pathname);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
   return (
     <div className="admin-app">
       <aside className="admin-sidebar">
@@ -46,7 +53,7 @@ export default function AdminLayout() {
             <Link to="/profile" className="admin-user-name">
               {user.full_name}
             </Link>
-            <button className="hf-button secondary small" onClick={logout}>
+            <button className="hf-button secondary small" onClick={handleLogout}>
               Đăng xuất
             </button>
           </div>

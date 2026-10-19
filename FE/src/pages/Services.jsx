@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import Breadcrumb from '../components/common/Breadcrumb';
 import ServiceCard from '../components/common/ServiceCard';
 import { ServiceGridSkeleton } from '../components/common/ServiceCardSkeleton';
@@ -56,9 +56,14 @@ export default function Services() {
 
       <div className="mb-8">
         <h1 className="text-2xl font-extrabold tracking-tight text-gray-900 sm:text-3xl">
-          Dịch vụ sửa chữa
+          Dịch vụ sửa chữa tại nhà
         </h1>
-        <p className="mt-1 text-sm text-gray-500">Giá niêm yết, minh bạch.</p>
+        <p className="mt-1 text-sm text-gray-500">
+          Bảng giá sinh viên & gia đình niêm yết minh bạch. Tiết kiệm hơn tới 50% khi đăng ký{' '}
+          <Link to="/packages" className="font-bold text-brand-600 hover:underline">
+            Gói bảo dưỡng HomeCare cả năm ⚡
+          </Link>
+        </p>
       </div>
 
       {/* Search + Filter */}

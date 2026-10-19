@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/auth';
 import { fetchServices, formatPrice } from '../api/services';
 import { createBooking } from '../api/bookings';
+import { fetchMySubscription } from '../api/packages';
 import './BookingPage.css';
 
 const TIME_SLOTS = [
@@ -28,6 +29,8 @@ export default function BookingPage() {
 
   const [services, setServices] = useState([]);
   const [loadingServices, setLoadingServices] = useState(true);
+  const [activeSub, setActiveSub] = useState(null);
+  const [useMaintenanceQuota, setUseMaintenanceQuota] = useState(false);
 
   const [selectedServiceId, setSelectedServiceId] = useState(preselectedServiceId);
   const [bookingType, setBookingType] = useState('immediate'); // 'immediate' | 'scheduled'
@@ -70,11 +73,33 @@ export default function BookingPage() {
     if (user?.address && !address) {
       setAddress(user.address);
     }
+    if (user && user.role === 'customer') {
+      fetchMySubscription()
+        .then((data) => {
+          if (data?.has_subscription) {
+            setActiveSub(data.subscription);
+          }
+        })
+        .catch(() => {});
+    }
   }, [user]);
 
   const currentService = useMemo(() => {
     return services.find((s) => s.id === selectedServiceId) || null;
   }, [services, selectedServiceId]);
+
+  const pricingInfo = useMemo(() => {
+    if (!currentService) return { original: 0, final: 0, isFree: false, discount: 0 };
+    const base = Number(currentService.base_price) || 0;
+    if (useMaintenanceQuota && activeSub && activeSub.remaining_quota > 0) {
+      return { original: base, final: 0, isFree: true, discount: 100 };
+    }
+    if (activeSub && activeSub.discount_percentage > 0) {
+      const discounted = Math.round(base * (1 - activeSub.discount_percentage / 100));
+      return { original: base, final: discounted, isFree: false, discount: activeSub.discount_percentage };
+    }
+    return { original: base, final: base, isFree: false, discount: 0 };
+  }, [currentService, useMaintenanceQuota, activeSub]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -127,10 +152,11 @@ export default function BookingPage() {
         scheduled_at: scheduledAt,
         address: address.trim(),
         description: description.trim() || undefined,
+        use_maintenance_quota: useMaintenanceQuota,
       };
 
       const result = await createBooking(payload);
-      setSuccessMsg('Đặt lịch sửa chữa thành công!');
+      setSuccessMsg(activeSub ? '⚡ Đặt lịch thành công! Đơn của bạn được xếp Hàng Đợi Ưu Tiên VIP và thợ sẽ nhận việc sớm nhất.' : 'Đặt lịch sửa chữa thành công!');
 
       // Lưu dự phòng vào localStorage để tương thích các component cũ nếu có
       try {
@@ -186,6 +212,46 @@ export default function BookingPage() {
         </div>
       )}
 
+      {user && activeSub && (
+        <div className="mx-auto mb-6 max-w-4xl rounded-2xl border-2 border-amber-300 bg-gradient-to-r from-amber-500/10 via-amber-400/20 to-yellow-500/10 p-4 text-amber-950 flex flex-wrap items-center justify-between gap-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500 text-white text-xl shadow-md">
+              👑
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-extrabold text-amber-900">Đặc Quyền Hội Viên: {activeSub.package_name}</span>
+                <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-black text-white">VIP</span>
+              </div>
+              <p className="text-xs text-amber-800 mt-0.5">
+                ⚡ Đơn của bạn được <strong>Ưu tiên nhận sớm nhất</strong> • Bảo hành mở rộng <strong>{activeSub.warranty_days} ngày</strong> • Giảm <strong>{activeSub.discount_percentage}%</strong> tiền công.
+              </p>
+            </div>
+          </div>
+          <div className="text-right text-xs">
+            <span className="font-bold text-amber-900">Lượt bảo dưỡng miễn phí:</span>{' '}
+            <strong className="text-base text-amber-700">{activeSub.remaining_quota}</strong> lần
+          </div>
+        </div>
+      )}
+
+      {user && !activeSub && (
+        <div className="mx-auto mb-6 max-w-4xl rounded-xl border border-blue-200 bg-blue-50/80 p-3.5 text-blue-900 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2">
+            <span>💡</span>
+            <span>
+              Muốn đơn <strong>luôn được thợ nhận sớm nhất</strong> và miễn phí bảo dưỡng định kỳ?
+            </span>
+          </div>
+          <Link
+            to="/packages"
+            className="font-bold text-brand-600 hover:text-brand-800 underline flex items-center gap-1"
+          >
+            Xem gói HomeCare từ 25k/tháng →
+          </Link>
+        </div>
+      )}
+
       <div className="booking-grid">
         <form className="booking-card" onSubmit={handleSubmit}>
           <h2>Thông tin đặt lịch</h2>
@@ -211,6 +277,24 @@ export default function BookingPage() {
               ))
             )}
           </select>
+
+          {/* Tùy chọn sử dụng lượt bảo dưỡng miễn phí theo gói VIP */}
+          {activeSub && activeSub.remaining_quota > 0 && (
+            <div style={{ margin: '14px 0', padding: '12px 14px', background: '#fef3c7', borderRadius: '10px', border: '1px solid #fde68a' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', margin: 0, fontWeight: 700, color: '#92400e' }}>
+                <input
+                  type="checkbox"
+                  checked={useMaintenanceQuota}
+                  onChange={(e) => setUseMaintenanceQuota(e.target.checked)}
+                  style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                />
+                <span>🎁 Sử dụng 1 lượt bảo dưỡng định kỳ miễn phí (Còn {activeSub.remaining_quota} lần)</span>
+              </label>
+              <div style={{ fontSize: '0.78rem', color: '#b45309', marginTop: '4px', marginLeft: '26px' }}>
+                Chi phí tiền công đơn này sẽ giảm về <strong>0 đ</strong> theo đặc quyền {activeSub.package_name}.
+              </div>
+            </div>
+          )}
 
           {/* Loại đặt lịch: Tức thì hay Hẹn giờ */}
           <label>Hình thức gọi thợ *</label>
@@ -362,15 +446,50 @@ export default function BookingPage() {
           </div>
 
           <div className="summary-line">
+            <span>Hàng đợi nhận việc</span>
+            <strong style={{ color: activeSub ? '#d97706' : '#2563eb' }}>
+              {activeSub ? '⚡ Ưu tiên VIP (Hàng đợi số 1)' : 'Tiêu chuẩn'}
+            </strong>
+          </div>
+
+          <div className="summary-line">
             <span>Bảo hành</span>
-            <strong>{currentService ? `${currentService.warranty_days} ngày` : '—'}</strong>
+            <strong style={{ color: activeSub ? '#15803d' : '#334155' }}>
+              {activeSub
+                ? `${activeSub.warranty_days} ngày (Bảo hành VIP HomeFix)`
+                : currentService
+                ? `${currentService.warranty_days} ngày`
+                : '—'}
+            </strong>
           </div>
 
           <div className="booking-price">
-            <span>Giá dịch vụ niêm yết</span>
-            <strong style={{ color: '#2563eb', fontSize: '1.25rem' }}>
-              {currentService ? formatPrice(currentService.base_price) : 'Báo giá sau'}
-            </strong>
+            <span>Chi phí thanh toán</span>
+            <div style={{ textAlign: 'right' }}>
+              {pricingInfo.isFree ? (
+                <div>
+                  <span style={{ textDecoration: 'line-through', color: '#94a3b8', fontSize: '0.85rem', marginRight: '6px' }}>
+                    {formatPrice(pricingInfo.original)}
+                  </span>
+                  <strong style={{ color: '#16a34a', fontSize: '1.25rem' }}>0 đ</strong>
+                  <div style={{ fontSize: '0.72rem', color: '#16a34a', fontWeight: 700 }}>🎁 Miễn phí (Trừ 1 lượt gói)</div>
+                </div>
+              ) : pricingInfo.discount > 0 ? (
+                <div>
+                  <span style={{ textDecoration: 'line-through', color: '#94a3b8', fontSize: '0.85rem', marginRight: '6px' }}>
+                    {formatPrice(pricingInfo.original)}
+                  </span>
+                  <strong style={{ color: '#2563eb', fontSize: '1.25rem' }}>
+                    {formatPrice(pricingInfo.final)}
+                  </strong>
+                  <div style={{ fontSize: '0.72rem', color: '#d97706', fontWeight: 700 }}>Giảm {pricingInfo.discount}% Hội viên VIP</div>
+                </div>
+              ) : (
+                <strong style={{ color: '#2563eb', fontSize: '1.25rem' }}>
+                  {currentService ? formatPrice(pricingInfo.final) : 'Báo giá sau'}
+                </strong>
+              )}
+            </div>
           </div>
 
           <p className="booking-note">

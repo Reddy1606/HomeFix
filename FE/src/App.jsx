@@ -19,6 +19,8 @@ import Dashboard from './pages/admin/Dashboard';
 import Bookings from './pages/admin/Bookings';
 import AdminServices from './pages/admin/Services';
 import AdminUsers from './pages/admin/Users';
+import AdminPackages from './pages/admin/Packages';
+import Packages from './pages/Packages';
 import './styles/account.css';
 import './styles/analytics.css';
 
@@ -31,6 +33,7 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/services" element={<Services />} />
             <Route path="/services/:id" element={<ServiceDetail />} />
+            <Route path="/packages" element={<Packages />} />
 
             {/* FE2 sẽ thay route đặt lịch bằng màn hình của nhóm. */}
             <Route path="/booking" element={<BookingPage />} />
@@ -51,6 +54,8 @@ export default function App() {
               <Route path="/profile" element={<Profile />} />
               <Route path="/my-bookings" element={<BookingHistory />} />
               <Route path="/my-bookings/:id" element={<BookingDetail />} />
+            </Route>
+            <Route element={<ProtectedRoute allowedRoles={['technician']} />}>
               <Route path="/technician/jobs" element={<TechnicianJobs />} />
             </Route>
 
@@ -62,6 +67,7 @@ export default function App() {
             <Route path="bookings" element={<Bookings />} />
             <Route path="services" element={<AdminServices />} />
             <Route path="users" element={<AdminUsers />} />
+            <Route path="packages" element={<AdminPackages />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Route>

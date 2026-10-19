@@ -55,12 +55,35 @@ export default function AuthPage({ mode = 'login' }) {
   const returnTo =
     safeReturnTo(location.state?.from) ||
     safeReturnTo(new URLSearchParams(location.search).get('redirect'));
-  const destination = (account) =>
-    returnTo && (!returnTo.startsWith('/admin') || account.role === 'admin')
-      ? returnTo
-      : account.role === 'admin'
-        ? '/admin'
-        : '/profile';
+  const destination = (account) => {
+    if (!account) return '/';
+    const role = account.role;
+
+    // 1. Phân loại và kiểm tra returnTo hợp lệ theo từng vai trò
+    if (returnTo) {
+      // Admin: Chỉ chấp nhận quay lại nếu returnTo thuộc khu vực /admin
+      if (role === 'admin' && returnTo.startsWith('/admin')) {
+        return returnTo;
+      }
+      // Thợ (technician): Chỉ chấp nhận quay lại các trang dành cho thợ (/technician hoặc /profile)
+      if (role === 'technician' && (returnTo.startsWith('/technician') || returnTo === '/profile')) {
+        return returnTo;
+      }
+      // Khách hàng (customer / user): Tuyệt đối KHÔNG chuyển vào /admin hoặc /technician
+      if (
+        role === 'customer' &&
+        !returnTo.startsWith('/admin') &&
+        !returnTo.startsWith('/technician')
+      ) {
+        return returnTo;
+      }
+    }
+
+    // 2. Điểm đến mặc định chuẩn xác theo từng role khi đăng nhập:
+    if (role === 'admin') return '/admin';
+    if (role === 'technician') return '/technician/jobs';
+    return '/'; // Khách hàng (user thường) chuyển thẳng về Trang chủ
+  };
 
   const change = (event) => {
     const { name, value } = event.target;

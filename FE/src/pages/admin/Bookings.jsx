@@ -142,7 +142,19 @@ export default function Bookings() {
                     </td>
                     <td>{money(booking.total_price)}</td>
                     <td>
-                      <StatusBadge status={booking.status} />
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <StatusBadge status={booking.status} />
+                        {(booking.is_priority || (typeof booking.description === 'string' && booking.description.includes('ƯU TIÊN VIP'))) && (
+                          <span style={{ fontSize: '0.68rem', fontWeight: 800, background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a', padding: '2px 6px', borderRadius: '4px', display: 'inline-block', width: 'fit-content' }}>
+                            ⚡ VIP ƯU TIÊN
+                          </span>
+                        )}
+                        {(booking.is_warranty_claim || booking.status === 'warranty_claim' || (typeof booking.description === 'string' && booking.description.includes('BẢO HÀNH'))) && (
+                          <span style={{ fontSize: '0.68rem', fontWeight: 800, background: '#ffe4e6', color: '#be123c', border: '1px solid #fecdd3', padding: '2px 6px', borderRadius: '4px', display: 'inline-block', width: 'fit-content' }}>
+                            🛡️ BẢO HÀNH
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td>
                       <button

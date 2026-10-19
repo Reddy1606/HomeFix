@@ -22,14 +22,48 @@ class Booking {
    * @returns {Promise<Object>}
    */
   static async create(bookingData) {
+    const customFields = ['is_priority', 'priority_level', 'is_warranty_claim', 'subscription_id'];
+    const safeData = { ...bookingData };
+
+    try {
+      const { data, error } = await supabase
+        .from('bookings')
+        .insert([safeData])
+        .select(WITH_SERVICE)
+        .single();
+
+      const isMissingColumn = (err) =>
+        err && (err.code === 'PGRST204' || err.code === '42703' || String(err.message).includes('column') || String(err.message).includes('is_priority'));
+
+      if (!error && data) {
+        return {
+          ...data,
+          is_priority: bookingData.is_priority || false,
+          priority_level: bookingData.priority_level || 0,
+          is_warranty_claim: bookingData.is_warranty_claim || false,
+        };
+      }
+      if (error && !isMissingColumn(error)) throw error;
+    } catch (err) {
+      const isMissingCol = err && (err.code === 'PGRST204' || err.code === '42703' || String(err.message).includes('column') || String(err.message).includes('is_priority'));
+      if (!isMissingCol) throw err;
+    }
+
+    // Nếu Supabase chưa có cột mới (42703), loại bỏ các cột custom rồi insert
+    customFields.forEach((field) => delete safeData[field]);
     const { data, error } = await supabase
       .from('bookings')
-      .insert([bookingData])
+      .insert([safeData])
       .select(WITH_SERVICE)
       .single();
 
     if (error) throw error;
-    return data;
+    return {
+      ...data,
+      is_priority: bookingData.is_priority || false,
+      priority_level: bookingData.priority_level || 0,
+      is_warranty_claim: bookingData.is_warranty_claim || false,
+    };
   }
 
   /**
@@ -52,6 +86,12 @@ class Booking {
       const Review = require('./Review');
       const rev = await Review.findByBookingId(id);
       if (rev) data.reviews = rev;
+      
+      const isDescPriority = typeof data.description === 'string' && (data.description.includes('ƯU TIÊN') || data.description.includes('VIP'));
+      const isDescWarranty = typeof data.description === 'string' && data.description.includes('BẢO HÀNH');
+      data.is_priority = data.is_priority === true || isDescPriority;
+      data.priority_level = data.priority_level || (isDescPriority ? 2 : 0);
+      data.is_warranty_claim = data.is_warranty_claim === true || isDescWarranty || data.status === 'warranty_claim';
     }
 
     return data;
@@ -87,6 +127,11 @@ class Booking {
         data.map(async (b) => {
           const rev = await Review.findByBookingId(b.id);
           if (rev) b.reviews = rev;
+          const isDescPriority = typeof b.description === 'string' && (b.description.includes('ƯU TIÊN') || b.description.includes('VIP'));
+          const isDescWarranty = typeof b.description === 'string' && b.description.includes('BẢO HÀNH');
+          b.is_priority = b.is_priority === true || isDescPriority;
+          b.priority_level = b.priority_level || (isDescPriority ? 2 : 0);
+          b.is_warranty_claim = b.is_warranty_claim === true || isDescWarranty || b.status === 'warranty_claim';
         })
       );
     }
@@ -95,10 +140,8 @@ class Booking {
   }
 
   /**
-   * Lấy tất cả bookings (Admin) - lọc theo trạng thái, khách, thợ, loại đặt, khoảng ngày tạo
-   * @param {Object} options - { status, customerId, technicianId, bookingType, from, to, page, limit }
-   *                           from/to là chuỗi ISO (mốc thời gian đã tính múi giờ)
-   * @returns {Promise<{ bookings: Array, total: number }>}
+   * Lấy tất cả bookings (Admin & Thợ) - lọc theo trạng thái, khách, thợ, loại đặt, khoảng ngày tạo
+   * Ưu tiên xếp các đơn VIP lên đầu danh sách!
    */
   static async findAll({
     status = null,
@@ -128,7 +171,27 @@ class Booking {
 
     const { data, error, count } = await query;
     if (error) throw error;
-    return { bookings: data, total: count };
+
+    const enriched = (data || []).map((b) => {
+      const isDescPriority = typeof b.description === 'string' && (b.description.includes('ƯU TIÊN') || b.description.includes('VIP'));
+      const isDescWarranty = typeof b.description === 'string' && b.description.includes('BẢO HÀNH');
+      return {
+        ...b,
+        is_priority: b.is_priority === true || isDescPriority,
+        priority_level: b.priority_level || (isDescPriority ? 2 : 0),
+        is_warranty_claim: b.is_warranty_claim === true || isDescWarranty || b.status === 'warranty_claim',
+      };
+    });
+
+    // Sắp xếp đơn VIP ưu tiên lên trước
+    enriched.sort((a, b) => {
+      const pA = a.is_priority ? 1 : 0;
+      const pB = b.is_priority ? 1 : 0;
+      if (pA !== pB) return pB - pA;
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
+
+    return { bookings: enriched, total: count };
   }
 
   /**

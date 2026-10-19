@@ -65,9 +65,21 @@ export default function Dashboard() {
               </article>
             ))}
           </div>
-          <div className="revenue-totals">
+          <div className="revenue-totals" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
             <article className="hf-card"><span>Giá trị đơn hoàn thành · toàn thời gian</span><strong>{money(data.revenue)}</strong></article>
             <article className="hf-card"><span>Hoa hồng 15% ước tính · toàn thời gian</span><strong>{money(data.commission)}</strong></article>
+            <article className="hf-card" style={{ border: '1.5px solid #fde68a', background: '#fffdf5' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: '#b45309', fontWeight: 700 }}>👑 Doanh thu gói VIP (MRR)</span>
+                <Link to="/admin/packages" style={{ fontSize: '0.75rem', color: '#b45309', fontWeight: 600 }}>Chi tiết →</Link>
+              </div>
+              <strong style={{ color: '#d97706' }}>
+                {money(data.subscription_stats?.total_package_revenue || 0)}
+              </strong>
+              <small style={{ color: '#64748b', fontSize: '0.75rem', display: 'block', marginTop: '2px' }}>
+                {data.subscription_stats?.active_subscribers || 0} hội viên VIP • MRR: {money(data.subscription_stats?.estimated_mrr || 0)}/tháng
+              </small>
+            </article>
           </div>
           <DashboardCharts data={data} />
           <div className="dashboard-recent">

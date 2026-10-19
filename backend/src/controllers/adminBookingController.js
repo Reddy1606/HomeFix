@@ -192,6 +192,10 @@ const getDashboardStats = async (req, res, next) => {
     // 3. Lấy 5 đơn đặt lịch gần đây nhất
     const { bookings: recent_bookings } = await Booking.findAll({ limit: 5 });
 
+    // 4. Thống kê thuê bao định kỳ (MRR & Subscribers)
+    const Subscription = require('../models/Subscription');
+    const subscription_stats = await Subscription.getStats();
+
     res.status(200).json({
       success: true,
       message: 'Lấy dữ liệu dashboard thành công.',
@@ -202,6 +206,7 @@ const getDashboardStats = async (req, res, next) => {
         total_services,
         status_counts: stats.status_counts,
         revenue: stats.revenue,
+        subscription_stats,
         recent_bookings,
       },
     });

@@ -2,6 +2,7 @@ const Booking = require('../models/Booking');
 const Service = require('../models/Service');
 const Review = require('../models/Review');
 const User = require('../models/User');
+const Subscription = require('../models/Subscription');
 const { parsePagination, buildPagination } = require('../utils/pagination');
 const { CUSTOMER_CANCELLABLE, STATUS_LABELS } = require('../utils/bookingStatus');
 
@@ -22,13 +23,13 @@ const withFlags = (booking) => {
  * @route   POST /api/bookings
  * @access  Private (customer)
  *
- * Body: { service_id, booking_type?, scheduled_at?, address, description? }
+ * Body: { service_id, booking_type?, scheduled_at?, address, description?, use_maintenance_quota? }
  * Giá (total_price), trạng thái và customer_id do server quyết định,
  * không nhận từ client.
  */
 const createBooking = async (req, res, next) => {
   try {
-    const { service_id, address, description } = req.body;
+    const { service_id, address, description, use_maintenance_quota } = req.body;
     const bookingType = req.body.booking_type || 'immediate';
 
     const service = await Service.findById(service_id);
@@ -39,6 +40,30 @@ const createBooking = async (req, res, next) => {
       });
     }
 
+    // Kiểm tra xem khách có gói VIP / Bảo dưỡng đang hoạt động không
+    const activeSub = await Subscription.findActiveByUserId(req.user.id);
+    let isPriority = false;
+    let priorityLevel = 0;
+    let totalPrice = Number(service.base_price);
+    let finalDescription = description ? description.trim() : '';
+    let subscriptionId = null;
+
+    if (activeSub) {
+      isPriority = true;
+      priorityLevel = activeSub.priority_level || 1;
+      subscriptionId = activeSub.id;
+
+      if (use_maintenance_quota === true && activeSub.remaining_quota > 0) {
+        totalPrice = 0;
+        finalDescription = `[ĐÃ DÙNG 1 LẦN BẢO DƯỠNG THEO GÓI] ${finalDescription}`.trim();
+        await Subscription.useQuota(activeSub.id);
+      } else if (activeSub.discount_percentage > 0) {
+        totalPrice = Math.round(totalPrice * (1 - activeSub.discount_percentage / 100));
+      }
+
+      finalDescription = `[⚡ ĐƠN VIP ƯU TIÊN NHẬN SỚM] ${finalDescription}`.trim();
+    }
+
     const booking = await Booking.create({
       customer_id: req.user.id,
       service_id: service.id,
@@ -46,13 +71,18 @@ const createBooking = async (req, res, next) => {
       booking_type: bookingType,
       scheduled_at: bookingType === 'scheduled' ? new Date(req.body.scheduled_at).toISOString() : null,
       address,
-      description: description || null,
-      total_price: service.base_price, // chốt giá tại thời điểm đặt
+      description: finalDescription || null,
+      total_price: totalPrice,
+      is_priority: isPriority,
+      priority_level: priorityLevel,
+      subscription_id: subscriptionId,
     });
 
     res.status(201).json({
       success: true,
-      message: 'Đặt lịch thành công! HomeFix sẽ sớm điều phối thợ cho bạn.',
+      message: isPriority
+        ? '⚡ Đặt lịch thành công! Đơn của bạn được xếp vào hàng đợi Ưu tiên VIP và thợ sẽ nhận việc sớm nhất.'
+        : 'Đặt lịch thành công! HomeFix sẽ sớm điều phối thợ cho bạn.',
       data: { booking: withFlags(booking) },
     });
   } catch (error) {
